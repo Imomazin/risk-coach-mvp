@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { Logo } from '../ui/Logo';
 import {
   LayoutDashboard,
@@ -19,28 +20,33 @@ interface NavItem {
   id: string;
   label: string;
   icon: React.ElementType;
+  path: string;
   badge?: number | string;
-  active?: boolean;
 }
 
 const mainNavItems: NavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, active: true },
-  { id: 'risks', label: 'Risk Register', icon: Shield, badge: 12 },
-  { id: 'alerts', label: 'Alerts', icon: AlertTriangle, badge: 3 },
-  { id: 'analytics', label: 'Analytics', icon: TrendingUp },
-  { id: 'reports', label: 'Reports', icon: FileText },
-  { id: 'ai-coach', label: 'AI Coach', icon: Sparkles },
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/' },
+  { id: 'risks', label: 'Risk Register', icon: Shield, path: '/risks', badge: 8 },
+  { id: 'alerts', label: 'Alerts', icon: AlertTriangle, path: '/alerts', badge: 3 },
+  { id: 'analytics', label: 'Analytics', icon: TrendingUp, path: '/analytics' },
+  { id: 'reports', label: 'Reports', icon: FileText, path: '/reports' },
+  { id: 'ai-coach', label: 'AI Coach', icon: Sparkles, path: '/ai-coach' },
 ];
 
 const secondaryNavItems: NavItem[] = [
-  { id: 'team', label: 'Team', icon: Users },
-  { id: 'settings', label: 'Settings', icon: Settings },
-  { id: 'help', label: 'Help & Support', icon: HelpCircle },
+  { id: 'team', label: 'Team', icon: Users, path: '/team' },
+  { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
+  { id: 'help', label: 'Help & Support', icon: HelpCircle, path: '/help' },
 ];
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
-  const [activeItem, setActiveItem] = useState('dashboard');
+  const location = useLocation();
+
+  const isActive = (path: string) => {
+    if (path === '/') return location.pathname === '/';
+    return location.pathname.startsWith(path);
+  };
 
   return (
     <aside
@@ -52,7 +58,9 @@ export function Sidebar() {
     >
       {/* Header */}
       <div className="h-16 flex items-center justify-between px-4 border-b border-slate-100">
-        <Logo collapsed={collapsed} />
+        <Link to="/">
+          <Logo collapsed={collapsed} />
+        </Link>
         <button
           onClick={() => setCollapsed(!collapsed)}
           className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
@@ -76,12 +84,11 @@ export function Sidebar() {
         </div>
 
         {mainNavItems.map((item) => (
-          <NavItemButton
+          <NavItemLink
             key={item.id}
             item={item}
-            isActive={activeItem === item.id}
+            isActive={isActive(item.path)}
             collapsed={collapsed}
-            onClick={() => setActiveItem(item.id)}
           />
         ))}
 
@@ -94,12 +101,11 @@ export function Sidebar() {
         </div>
 
         {secondaryNavItems.map((item) => (
-          <NavItemButton
+          <NavItemLink
             key={item.id}
             item={item}
-            isActive={activeItem === item.id}
+            isActive={isActive(item.path)}
             collapsed={collapsed}
-            onClick={() => setActiveItem(item.id)}
           />
         ))}
       </nav>
@@ -107,7 +113,8 @@ export function Sidebar() {
       {/* User Section */}
       <div className="p-3 border-t border-slate-100">
         {/* Quick notification bell */}
-        <button
+        <Link
+          to="/alerts"
           className={`
             w-full flex items-center gap-3 p-2.5 rounded-xl
             text-slate-600 hover:bg-slate-50 transition-all duration-200
@@ -121,10 +128,11 @@ export function Sidebar() {
           {!collapsed && (
             <span className="text-sm font-medium">Notifications</span>
           )}
-        </button>
+        </Link>
 
         {/* User profile */}
-        <div
+        <Link
+          to="/settings"
           className={`
             flex items-center gap-3 p-2.5 rounded-xl mt-1
             bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors
@@ -142,30 +150,24 @@ export function Sidebar() {
               <p className="text-xs text-slate-500 truncate">Risk Manager</p>
             </div>
           )}
-        </div>
+        </Link>
       </div>
     </aside>
   );
 }
 
-interface NavItemButtonProps {
+interface NavItemLinkProps {
   item: NavItem;
   isActive: boolean;
   collapsed: boolean;
-  onClick: () => void;
 }
 
-function NavItemButton({
-  item,
-  isActive,
-  collapsed,
-  onClick,
-}: NavItemButtonProps) {
+function NavItemLink({ item, isActive, collapsed }: NavItemLinkProps) {
   const Icon = item.icon;
 
   return (
-    <button
-      onClick={onClick}
+    <Link
+      to={item.path}
       className={`
         w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
         transition-all duration-200
@@ -202,6 +204,6 @@ function NavItemButton({
           )}
         </>
       )}
-    </button>
+    </Link>
   );
 }

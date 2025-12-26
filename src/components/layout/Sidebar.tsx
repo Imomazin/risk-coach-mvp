@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Logo } from '../ui/Logo';
+import { useAuth } from '../../contexts/AuthContext';
 import {
   LayoutDashboard,
   Shield,
@@ -14,6 +15,7 @@ import {
   ChevronRight,
   Bell,
   Sparkles,
+  LogOut,
 } from 'lucide-react';
 
 interface NavItem {
@@ -42,10 +44,27 @@ const secondaryNavItems: NavItem[] = [
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
     return location.pathname.startsWith(path);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/landing');
+  };
+
+  // Get user initials
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   return (
@@ -131,26 +150,41 @@ export function Sidebar() {
         </Link>
 
         {/* User profile */}
-        <Link
-          to="/settings"
+        <div
           className={`
             flex items-center gap-3 p-2.5 rounded-xl mt-1
-            bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors
+            bg-slate-50
             ${collapsed ? 'justify-center' : ''}
           `}
         >
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-lumina-500 to-lumina-700 flex items-center justify-center text-white font-semibold text-sm">
-            JD
+            {user ? getInitials(user.name) : 'U'}
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-slate-900 truncate">
-                John Doe
+                {user?.name || 'User'}
               </p>
               <p className="text-xs text-slate-500 truncate">Risk Manager</p>
             </div>
           )}
-        </Link>
+        </div>
+
+        {/* Logout button */}
+        <button
+          onClick={handleLogout}
+          className={`
+            w-full flex items-center gap-3 p-2.5 rounded-xl mt-1
+            text-slate-600 hover:bg-red-50 hover:text-red-600 transition-all duration-200
+            ${collapsed ? 'justify-center' : ''}
+          `}
+          title={collapsed ? 'Sign out' : undefined}
+        >
+          <LogOut className="w-5 h-5" />
+          {!collapsed && (
+            <span className="text-sm font-medium">Sign out</span>
+          )}
+        </button>
       </div>
     </aside>
   );

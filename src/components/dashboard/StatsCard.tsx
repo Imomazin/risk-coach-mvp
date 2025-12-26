@@ -19,11 +19,11 @@ export function StatsCard({
   iconColor = 'violet',
 }: StatsCardProps) {
   const iconColors = {
-    violet: 'bg-lumina-50 text-lumina-600',
-    emerald: 'bg-emerald-50 text-emerald-600',
-    amber: 'bg-amber-50 text-amber-600',
-    red: 'bg-red-50 text-red-600',
-    blue: 'bg-blue-50 text-blue-600',
+    violet: 'bg-lumina-50 dark:bg-lumina-900/50 text-lumina-600 dark:text-lumina-400',
+    emerald: 'bg-emerald-50 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400',
+    amber: 'bg-amber-50 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400',
+    red: 'bg-red-50 dark:bg-red-900/50 text-red-600 dark:text-red-400',
+    blue: 'bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400',
   };
 
   const getTrendIcon = () => {
@@ -36,19 +36,19 @@ export function StatsCard({
   };
 
   const getTrendColor = () => {
-    if (!change) return 'text-slate-500 bg-slate-50';
+    if (!change) return 'text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800';
     // For risks, going down is good (green), up is bad (red)
     return change < 0
-      ? 'text-emerald-600 bg-emerald-50'
-      : 'text-red-600 bg-red-50';
+      ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/50'
+      : 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/50';
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-card hover:shadow-card-hover transition-all duration-300">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6 shadow-card hover:shadow-card-hover transition-all duration-300">
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <p className="text-sm font-medium text-slate-500 mb-1">{title}</p>
-          <p className="text-3xl font-display font-bold text-slate-900">
+          <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">{title}</p>
+          <p className="text-3xl font-display font-bold text-slate-900 dark:text-white">
             {value}
           </p>
 
@@ -61,7 +61,7 @@ export function StatsCard({
                 {change ? `${Math.abs(change)}%` : '0%'}
               </span>
               {changeLabel && (
-                <span className="text-xs text-slate-400">{changeLabel}</span>
+                <span className="text-xs text-slate-400 dark:text-slate-500">{changeLabel}</span>
               )}
             </div>
           )}

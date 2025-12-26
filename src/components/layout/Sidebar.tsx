@@ -70,19 +70,19 @@ export function Sidebar() {
   return (
     <aside
       className={`
-        fixed left-0 top-0 h-screen bg-white border-r border-slate-200
+        fixed left-0 top-0 h-screen bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700
         flex flex-col transition-all duration-300 z-50
         ${collapsed ? 'w-20' : 'w-64'}
       `}
     >
       {/* Header */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-slate-100">
+      <div className="h-16 flex items-center justify-between px-4 border-b border-slate-100 dark:border-slate-800">
         <Link to="/">
           <Logo collapsed={collapsed} />
         </Link>
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+          className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
         >
           {collapsed ? (
             <ChevronRight className="w-4 h-4" />
@@ -96,7 +96,7 @@ export function Sidebar() {
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         <div className="mb-2">
           {!collapsed && (
-            <span className="px-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+            <span className="px-3 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
               Main Menu
             </span>
           )}
@@ -111,9 +111,9 @@ export function Sidebar() {
           />
         ))}
 
-        <div className="pt-4 mt-4 border-t border-slate-100">
+        <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800">
           {!collapsed && (
-            <span className="px-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+            <span className="px-3 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
               Settings
             </span>
           )}
@@ -130,13 +130,13 @@ export function Sidebar() {
       </nav>
 
       {/* User Section */}
-      <div className="p-3 border-t border-slate-100">
+      <div className="p-3 border-t border-slate-100 dark:border-slate-800">
         {/* Quick notification bell */}
         <Link
           to="/alerts"
           className={`
             w-full flex items-center gap-3 p-2.5 rounded-xl
-            text-slate-600 hover:bg-slate-50 transition-all duration-200
+            text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200
             ${collapsed ? 'justify-center' : ''}
           `}
         >
@@ -153,7 +153,7 @@ export function Sidebar() {
         <div
           className={`
             flex items-center gap-3 p-2.5 rounded-xl mt-1
-            bg-slate-50
+            bg-slate-50 dark:bg-slate-800
             ${collapsed ? 'justify-center' : ''}
           `}
         >
@@ -162,10 +162,10 @@ export function Sidebar() {
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-900 truncate">
+              <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
                 {user?.name || 'User'}
               </p>
-              <p className="text-xs text-slate-500 truncate">Risk Manager</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 truncate">Risk Manager</p>
             </div>
           )}
         </div>
@@ -175,7 +175,7 @@ export function Sidebar() {
           onClick={handleLogout}
           className={`
             w-full flex items-center gap-3 p-2.5 rounded-xl mt-1
-            text-slate-600 hover:bg-red-50 hover:text-red-600 transition-all duration-200
+            text-slate-600 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-all duration-200
             ${collapsed ? 'justify-center' : ''}
           `}
           title={collapsed ? 'Sign out' : undefined}
@@ -208,15 +208,15 @@ function NavItemLink({ item, isActive, collapsed }: NavItemLinkProps) {
         ${collapsed ? 'justify-center' : ''}
         ${
           isActive
-            ? 'bg-lumina-50 text-lumina-700 hover:bg-lumina-100'
-            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+            ? 'bg-lumina-50 dark:bg-lumina-900/30 text-lumina-700 dark:text-lumina-400 hover:bg-lumina-100 dark:hover:bg-lumina-900/40'
+            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
         }
       `}
       title={collapsed ? item.label : undefined}
     >
       <Icon
         className={`w-5 h-5 flex-shrink-0 ${
-          isActive ? 'text-lumina-600' : ''
+          isActive ? 'text-lumina-600 dark:text-lumina-400' : ''
         }`}
       />
       {!collapsed && (
@@ -228,8 +228,8 @@ function NavItemLink({ item, isActive, collapsed }: NavItemLinkProps) {
                 px-2 py-0.5 text-xs font-semibold rounded-full
                 ${
                   isActive
-                    ? 'bg-lumina-200 text-lumina-700'
-                    : 'bg-slate-200 text-slate-600'
+                    ? 'bg-lumina-200 dark:bg-lumina-800 text-lumina-700 dark:text-lumina-300'
+                    : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
                 }
               `}
             >

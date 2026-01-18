@@ -55,6 +55,7 @@ import {
   Workflow,
   Plug,
   ExternalLink,
+  X,
 } from 'lucide-react';
 import { sampleRisks, riskStats, riskMatrixData } from '../lib/sampleData';
 
@@ -467,11 +468,124 @@ const timelineEvents = [
   ]},
 ];
 
+// Case Study Modal Component
+interface CaseStudy {
+  id: number;
+  title: string;
+  company: string;
+  industry: string;
+  challenge: string;
+  solution: string;
+  results: string[];
+  image: string;
+}
+
+function CaseStudyModal({ study, onClose }: { study: CaseStudy | null; onClose: () => void }) {
+  if (!study) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* Modal */}
+      <div className="relative w-full max-w-4xl max-h-[90vh] overflow-auto bg-white dark:bg-slate-900 rounded-2xl shadow-2xl">
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors z-10"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        {/* Hero Image */}
+        <div className="relative h-64">
+          <img
+            src={study.image}
+            alt={study.title}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+          <div className="absolute bottom-6 left-6 right-6 text-white">
+            <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-lumina-500/80 mb-3">
+              {study.industry}
+            </span>
+            <h2 className="text-2xl md:text-3xl font-display font-bold">{study.title}</h2>
+            <p className="text-white/70 mt-1">{study.company}</p>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 md:p-8">
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Challenge */}
+            <div>
+              <h3 className="text-sm font-semibold text-red-500 uppercase tracking-wider mb-3">
+                The Challenge
+              </h3>
+              <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                {study.challenge}
+              </p>
+            </div>
+
+            {/* Solution */}
+            <div>
+              <h3 className="text-sm font-semibold text-lumina-500 uppercase tracking-wider mb-3">
+                Our Solution
+              </h3>
+              <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                {study.solution}
+              </p>
+            </div>
+          </div>
+
+          {/* Results */}
+          <div className="mt-8">
+            <h3 className="text-sm font-semibold text-emerald-500 uppercase tracking-wider mb-4">
+              Key Results
+            </h3>
+            <div className="grid sm:grid-cols-3 gap-4">
+              {study.results.map((result, idx) => (
+                <div
+                  key={idx}
+                  className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20"
+                >
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                    <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+                      {result}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* CTA */}
+          <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Want similar results for your organization?
+            </p>
+            <Button variant="primary" size="md">
+              Contact Us
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function Dashboard() {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [currentCaseIndex, setCurrentCaseIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [toolFilter, setToolFilter] = useState('All');
+  const [selectedCaseStudy, setSelectedCaseStudy] = useState<CaseStudy | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll case studies
@@ -673,9 +787,19 @@ export function Dashboard() {
               </div>
             </div>
 
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800">
+            <div
+              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 cursor-pointer group"
+              onClick={() => setSelectedCaseStudy(caseStudies[currentCaseIndex])}
+            >
+              {/* Click hint overlay */}
+              <div className="absolute inset-0 bg-lumina-500/0 group-hover:bg-lumina-500/5 transition-colors duration-300 z-10 pointer-events-none flex items-center justify-center">
+                <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-medium">
+                  Click for details
+                </span>
+              </div>
+
               <div
-                className="flex transition-transform duration-500 ease-in-out"
+                className="flex transition-all duration-700 ease-out"
                 style={{ transform: `translateX(-${currentCaseIndex * 100}%)` }}
               >
                 {caseStudies.map((study) => (
@@ -688,21 +812,26 @@ export function Dashboard() {
                         <h4 className="text-xl md:text-2xl font-display font-bold mb-2">{study.title}</h4>
                         <p className="text-white/60 text-sm mb-3">{study.company}</p>
                         <div className="mb-4">
-                          <p className="text-sm text-white/70">{study.challenge}</p>
+                          <p className="text-sm text-white/70 line-clamp-2">{study.challenge}</p>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          {study.results.map((result, idx) => (
+                          {study.results.slice(0, 2).map((result, idx) => (
                             <span key={idx} className="px-3 py-1 rounded-full text-xs bg-emerald-500/20 text-emerald-300">
                               {result}
                             </span>
                           ))}
+                          {study.results.length > 2 && (
+                            <span className="px-3 py-1 rounded-full text-xs bg-white/10 text-white/60">
+                              +{study.results.length - 2} more
+                            </span>
+                          )}
                         </div>
                       </div>
                       <div className="lg:col-span-2 hidden md:block">
                         <img
                           src={study.image}
                           alt={study.title}
-                          className="w-full h-48 object-cover rounded-xl opacity-80"
+                          className="w-full h-48 object-cover rounded-xl opacity-80 group-hover:opacity-100 transition-opacity duration-300"
                         />
                       </div>
                     </div>
@@ -710,17 +839,22 @@ export function Dashboard() {
                 ))}
               </div>
 
-              {/* Carousel Dots */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                {caseStudies.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setCurrentCaseIndex(idx)}
-                    className={`w-2 h-2 rounded-full transition-colors ${
-                      idx === currentCaseIndex ? 'bg-white' : 'bg-white/30'
-                    }`}
-                  />
-                ))}
+              {/* Carousel Dots & Progress */}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3">
+                <div className="flex gap-2">
+                  {caseStudies.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={(e) => { e.stopPropagation(); setCurrentCaseIndex(idx); }}
+                      className={`h-2 rounded-full transition-all duration-300 ${
+                        idx === currentCaseIndex ? 'bg-white w-6' : 'bg-white/30 w-2 hover:bg-white/50'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className="text-xs text-white/50">
+                  {currentCaseIndex + 1} / {caseStudies.length}
+                </span>
               </div>
             </div>
           </div>
@@ -1338,6 +1472,14 @@ export function Dashboard() {
             </table>
           </div>
         </Card>
+      )}
+
+      {/* Case Study Modal */}
+      {selectedCaseStudy && (
+        <CaseStudyModal
+          study={selectedCaseStudy}
+          onClose={() => setSelectedCaseStudy(null)}
+        />
       )}
     </Layout>
   );

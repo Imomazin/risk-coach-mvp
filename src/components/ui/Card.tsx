@@ -18,11 +18,11 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
     ref
   ) => {
     const baseStyles =
-      'bg-white rounded-2xl transition-all duration-300';
+      'bg-white dark:bg-slate-900 rounded-2xl transition-all duration-300';
 
     const variants = {
-      default: 'shadow-card border border-slate-100 hover:shadow-card-hover',
-      bordered: 'border-2 border-slate-200',
+      default: 'shadow-card border border-slate-100 dark:border-slate-800 hover:shadow-card-hover',
+      bordered: 'border-2 border-slate-200 dark:border-slate-700',
       elevated: 'shadow-lg hover:shadow-xl',
     };
 
@@ -72,7 +72,7 @@ export const CardTitle = forwardRef<HTMLHeadingElement, CardTitleProps>(
     return (
       <h3
         ref={ref}
-        className={`font-display font-semibold text-lg text-slate-900 ${className}`}
+        className={`font-display font-semibold text-lg text-slate-900 dark:text-white ${className}`}
         {...props}
       >
         {children}

@@ -48,9 +48,9 @@ const insightIcons = {
 };
 
 const insightColors = {
-  warning: 'text-amber-500 bg-amber-50',
-  suggestion: 'text-lumina-500 bg-lumina-50',
-  trend: 'text-blue-500 bg-blue-50',
+  warning: 'text-amber-500 bg-amber-50 dark:bg-amber-900/50',
+  suggestion: 'text-lumina-500 bg-lumina-50 dark:bg-lumina-900/50',
+  trend: 'text-blue-500 bg-blue-50 dark:bg-blue-900/50',
 };
 
 export function AICoachWidget() {
@@ -73,7 +73,7 @@ export function AICoachWidget() {
 
       {/* Insights */}
       <div className="p-4 space-y-3">
-        <p className="text-xs font-medium text-slate-400 uppercase tracking-wider px-2">
+        <p className="text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider px-2">
           Smart Insights
         </p>
         {sampleInsights.map((insight) => {
@@ -81,7 +81,7 @@ export function AICoachWidget() {
           return (
             <button
               key={insight.id}
-              className="w-full text-left p-3 rounded-xl hover:bg-slate-50 transition-colors group"
+              className="w-full text-left p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group"
             >
               <div className="flex items-start gap-3">
                 <div
@@ -90,14 +90,14 @@ export function AICoachWidget() {
                   <Icon className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm text-slate-900">
+                  <p className="font-medium text-sm text-slate-900 dark:text-white">
                     {insight.title}
                   </p>
-                  <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">
                     {insight.description}
                   </p>
                 </div>
-                <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 mt-0.5" />
+                <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 mt-0.5" />
               </div>
             </button>
           );
@@ -105,15 +105,15 @@ export function AICoachWidget() {
       </div>
 
       {/* Chat Input */}
-      <div className="p-4 border-t border-slate-100">
+      <div className="p-4 border-t border-slate-100 dark:border-slate-800">
         <div className="flex items-center gap-2">
           <input
             type="text"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Ask about your risks..."
-            className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50
-                     text-sm text-slate-900 placeholder-slate-400
+            className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800
+                     text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500
                      focus:outline-none focus:ring-2 focus:ring-lumina-500/20 focus:border-lumina-500
                      transition-all duration-200"
           />
@@ -121,7 +121,7 @@ export function AICoachWidget() {
             <Send className="w-4 h-4" />
           </Button>
         </div>
-        <p className="text-[10px] text-slate-400 mt-2 text-center">
+        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2 text-center">
           AI suggestions are for guidance only. Always verify with your risk team.
         </p>
       </div>

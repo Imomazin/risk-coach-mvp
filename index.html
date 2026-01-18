@@ -1,12 +1,33 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark black">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/lumina-r-icon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Lumina R - Intelligent Risk Management for SMEs" />
-    <meta name="theme-color" content="#7c3aed" />
+    <meta name="theme-color" content="#000000" />
     <title>Lumina R | Risk Intelligence Platform</title>
+    <style>
+      /* Prevent flash of white background */
+      html, body { background-color: #000000; }
+    </style>
+    <script>
+      // Apply theme immediately to prevent flash
+      (function() {
+        const theme = localStorage.getItem('lumina_r_theme') || 'black';
+        const root = document.documentElement;
+        root.classList.remove('light', 'dark', 'black');
+        if (theme === 'light') {
+          root.style.backgroundColor = '#f8fafc';
+        } else if (theme === 'dark') {
+          root.classList.add('dark');
+          root.style.backgroundColor = '#020617';
+        } else {
+          root.classList.add('dark', 'black');
+          root.style.backgroundColor = '#000000';
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -1,6 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
 @import "tailwindcss";
 
+/* Enable class-based dark mode for Tailwind v4 */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   /* Lumina R Primary - Deep Violet/Indigo */
   --color-lumina-50: #f5f3ff;
@@ -52,9 +55,70 @@
     @apply border-slate-200;
   }
 
+  /* Default to black theme */
+  html {
+    background-color: #000000;
+    color-scheme: dark;
+  }
+
   body {
-    @apply bg-slate-50 text-slate-900 antialiased;
+    @apply text-white antialiased;
+    background-color: #000000;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Light mode - only when explicitly set */
+  html:not(.dark):not(.black) body,
+  html.light body {
+    @apply bg-slate-50 text-slate-900;
+  }
+
+  html:not(.dark):not(.black),
+  html.light {
+    background-color: #f8fafc;
+    color-scheme: light;
+  }
+
+  /* Dark slate mode */
+  html.dark:not(.black) body {
+    @apply bg-slate-950 text-slate-100;
+  }
+
+  html.dark:not(.black) {
+    background-color: #020617;
+  }
+
+  /* True black theme (OLED) - default */
+  html.black body,
+  html:not(.light):not(.dark) body {
+    background-color: #000000 !important;
+    @apply text-white;
+  }
+
+  html.black,
+  html:not(.light):not(.dark) {
+    background-color: #000000;
+  }
+
+  .dark .bg-slate-900,
+  .black .bg-slate-900 {
+    background-color: #000000 !important;
+  }
+
+  .black .bg-slate-950 {
+    background-color: #000000 !important;
+  }
+
+  .black .bg-slate-800 {
+    background-color: #0a0a0a !important;
+  }
+
+  .black .border-slate-700 {
+    border-color: #1a1a1a !important;
+  }
+
+  .black .border-slate-800 {
+    border-color: #111111 !important;
   }
 
   ::-webkit-scrollbar {
@@ -62,14 +126,25 @@
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-slate-100 rounded-full;
+    background-color: #0a0a0a;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-slate-300 rounded-full;
+    background-color: #333333;
+    border-radius: 9999px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-slate-400;
+    background-color: #444444;
+  }
+
+  html.light ::-webkit-scrollbar-track,
+  html:not(.dark):not(.black) ::-webkit-scrollbar-track {
+    @apply bg-slate-100;
+  }
+
+  html.light ::-webkit-scrollbar-thumb,
+  html:not(.dark):not(.black) ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300;
   }
 }

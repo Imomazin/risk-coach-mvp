@@ -52,21 +52,52 @@
     @apply border-slate-200;
   }
 
+  /* Default to black theme */
+  html {
+    background-color: #000000;
+    color-scheme: dark;
+  }
+
   body {
-    @apply bg-slate-50 text-slate-900 antialiased;
+    @apply text-white antialiased;
+    background-color: #000000;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
-  /* Dark mode base */
-  .dark body {
+  /* Light mode - only when explicitly set */
+  html:not(.dark):not(.black) body,
+  html.light body {
+    @apply bg-slate-50 text-slate-900;
+  }
+
+  html:not(.dark):not(.black),
+  html.light {
+    background-color: #f8fafc;
+    color-scheme: light;
+  }
+
+  /* Dark slate mode */
+  html.dark:not(.black) body {
     @apply bg-slate-950 text-slate-100;
   }
 
-  /* True black theme (OLED) */
-  .black body {
-    background-color: #000000 !important;
+  html.dark:not(.black) {
+    background-color: #020617;
   }
 
+  /* True black theme (OLED) - default */
+  html.black body,
+  html:not(.light):not(.dark) body {
+    background-color: #000000 !important;
+    @apply text-white;
+  }
+
+  html.black,
+  html:not(.light):not(.dark) {
+    background-color: #000000;
+  }
+
+  .dark .bg-slate-900,
   .black .bg-slate-900 {
     background-color: #000000 !important;
   }
@@ -92,30 +123,25 @@
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-slate-100 rounded-full;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    @apply bg-slate-300 rounded-full;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-slate-400;
-  }
-
-  .dark ::-webkit-scrollbar-track {
-    @apply bg-slate-800;
-  }
-
-  .dark ::-webkit-scrollbar-thumb {
-    @apply bg-slate-600;
-  }
-
-  .black ::-webkit-scrollbar-track {
     background-color: #0a0a0a;
   }
 
-  .black ::-webkit-scrollbar-thumb {
+  ::-webkit-scrollbar-thumb {
     background-color: #333333;
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: #444444;
+  }
+
+  html.light ::-webkit-scrollbar-track,
+  html:not(.dark):not(.black) ::-webkit-scrollbar-track {
+    @apply bg-slate-100;
+  }
+
+  html.light ::-webkit-scrollbar-thumb,
+  html:not(.dark):not(.black) ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300;
   }
 }

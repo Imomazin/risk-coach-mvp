@@ -57,6 +57,36 @@
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
+  /* Dark mode base */
+  .dark body {
+    @apply bg-slate-950 text-slate-100;
+  }
+
+  /* True black theme (OLED) */
+  .black body {
+    background-color: #000000 !important;
+  }
+
+  .black .bg-slate-900 {
+    background-color: #000000 !important;
+  }
+
+  .black .bg-slate-950 {
+    background-color: #000000 !important;
+  }
+
+  .black .bg-slate-800 {
+    background-color: #0a0a0a !important;
+  }
+
+  .black .border-slate-700 {
+    border-color: #1a1a1a !important;
+  }
+
+  .black .border-slate-800 {
+    border-color: #111111 !important;
+  }
+
   ::-webkit-scrollbar {
     @apply w-2;
   }
@@ -71,5 +101,21 @@
 
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-slate-400;
+  }
+
+  .dark ::-webkit-scrollbar-track {
+    @apply bg-slate-800;
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    @apply bg-slate-600;
+  }
+
+  .black ::-webkit-scrollbar-track {
+    background-color: #0a0a0a;
+  }
+
+  .black ::-webkit-scrollbar-thumb {
+    background-color: #333333;
   }
 }

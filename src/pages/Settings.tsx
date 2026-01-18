@@ -17,6 +17,7 @@ import {
   Moon,
   Monitor,
   Check,
+  Circle,
 } from 'lucide-react';
 
 const settingsSections = [
@@ -32,6 +33,7 @@ const settingsSections = [
 const themeOptions = [
   { id: 'light', label: 'Light', icon: Sun, description: 'Light theme for daytime use' },
   { id: 'dark', label: 'Dark', icon: Moon, description: 'Dark theme for reduced eye strain' },
+  { id: 'black', label: 'Black', icon: Circle, description: 'True black OLED-friendly theme' },
   { id: 'system', label: 'System', icon: Monitor, description: 'Follows your system preference' },
 ] as const;
 
@@ -303,7 +305,7 @@ export function Settings() {
               <div className="space-y-6">
                 <div>
                   <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-4">Theme</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {themeOptions.map((option) => {
                       const Icon = option.icon;
                       const isSelected = theme === option.id;

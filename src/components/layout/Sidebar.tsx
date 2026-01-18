@@ -16,6 +16,7 @@ import {
   Bell,
   Sparkles,
   LogOut,
+  Layers,
 } from 'lucide-react';
 
 interface NavItem {
@@ -29,10 +30,11 @@ interface NavItem {
 const mainNavItems: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/' },
   { id: 'risks', label: 'Risk Register', icon: Shield, path: '/risks', badge: 8 },
+  { id: 'frameworks', label: 'Risk Frameworks', icon: Layers, path: '/frameworks' },
   { id: 'alerts', label: 'Alerts', icon: AlertTriangle, path: '/alerts', badge: 3 },
   { id: 'analytics', label: 'Analytics', icon: TrendingUp, path: '/analytics' },
   { id: 'reports', label: 'Reports', icon: FileText, path: '/reports' },
-  { id: 'ai-coach', label: 'AI Coach', icon: Sparkles, path: '/ai-coach' },
+  { id: 'ai-coach', label: 'AI Risk Advisor', icon: Sparkles, path: '/ai-coach' },
 ];
 
 const secondaryNavItems: NavItem[] = [

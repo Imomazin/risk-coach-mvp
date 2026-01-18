@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react';
 import { createContext, useContext, useState, useEffect } from 'react';
 
-type Theme = 'light' | 'dark' | 'system';
+type Theme = 'light' | 'dark' | 'black' | 'system';
 
 interface ThemeContextType {
   theme: Theme;
-  resolvedTheme: 'light' | 'dark';
+  resolvedTheme: 'light' | 'dark' | 'black';
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
 }
@@ -18,13 +18,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return (stored as Theme) || 'system';
   });
 
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark' | 'black'>('light');
 
   useEffect(() => {
     const root = window.document.documentElement;
 
     const updateTheme = () => {
-      let effectiveTheme: 'light' | 'dark';
+      let effectiveTheme: 'light' | 'dark' | 'black';
 
       if (theme === 'system') {
         effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -34,10 +34,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
       setResolvedTheme(effectiveTheme);
 
+      // Remove all theme classes first
+      root.classList.remove('dark', 'black');
+
       if (effectiveTheme === 'dark') {
         root.classList.add('dark');
-      } else {
-        root.classList.remove('dark');
+      } else if (effectiveTheme === 'black') {
+        root.classList.add('dark', 'black');
       }
     };
 
@@ -61,8 +64,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
 
   const toggleTheme = () => {
-    const newTheme = resolvedTheme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
+    const themes: Theme[] = ['light', 'dark', 'black'];
+    const currentIndex = themes.indexOf(resolvedTheme);
+    const nextIndex = (currentIndex + 1) % themes.length;
+    setTheme(themes[nextIndex]);
   };
 
   return (

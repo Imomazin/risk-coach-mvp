@@ -49,6 +49,12 @@ import {
   Thermometer,
   CircleDot,
   Crosshair,
+  Link2,
+  Cloud,
+  Server,
+  Workflow,
+  Plug,
+  ExternalLink,
 } from 'lucide-react';
 import { sampleRisks, riskStats, riskMatrixData } from '../lib/sampleData';
 
@@ -316,6 +322,118 @@ const riskAppetiteCategories = [
   },
 ];
 
+// Platform Integrations
+const platformIntegrations = [
+  {
+    id: 1,
+    name: 'ServiceNow GRC',
+    description: 'Enterprise governance, risk, and compliance platform',
+    status: 'connected',
+    icon: Cloud,
+    color: 'bg-green-500',
+    lastSync: '2 mins ago',
+  },
+  {
+    id: 2,
+    name: 'SAP GRC',
+    description: 'Access control and process control integration',
+    status: 'connected',
+    icon: Server,
+    color: 'bg-blue-500',
+    lastSync: '15 mins ago',
+  },
+  {
+    id: 3,
+    name: 'Microsoft 365',
+    description: 'Compliance center and security integration',
+    status: 'connected',
+    icon: Cloud,
+    color: 'bg-cyan-500',
+    lastSync: '5 mins ago',
+  },
+  {
+    id: 4,
+    name: 'Archer GRC',
+    description: 'RSA Archer risk management platform',
+    status: 'connected',
+    icon: Shield,
+    color: 'bg-red-500',
+    lastSync: '1 hour ago',
+  },
+  {
+    id: 5,
+    name: 'Workiva',
+    description: 'SOX compliance and financial reporting',
+    status: 'pending',
+    icon: FileText,
+    color: 'bg-amber-500',
+    lastSync: 'Setup required',
+  },
+  {
+    id: 6,
+    name: 'Splunk SIEM',
+    description: 'Security information and event management',
+    status: 'connected',
+    icon: Database,
+    color: 'bg-purple-500',
+    lastSync: 'Real-time',
+  },
+  {
+    id: 7,
+    name: 'CrowdStrike',
+    description: 'Endpoint detection and threat intelligence',
+    status: 'connected',
+    icon: Lock,
+    color: 'bg-rose-500',
+    lastSync: 'Real-time',
+  },
+  {
+    id: 8,
+    name: 'Jira',
+    description: 'Issue tracking and workflow automation',
+    status: 'connected',
+    icon: Workflow,
+    color: 'bg-blue-600',
+    lastSync: '30 mins ago',
+  },
+  {
+    id: 9,
+    name: 'Power BI',
+    description: 'Business analytics and dashboards',
+    status: 'connected',
+    icon: BarChart3,
+    color: 'bg-yellow-500',
+    lastSync: '1 hour ago',
+  },
+  {
+    id: 10,
+    name: 'Tableau',
+    description: 'Visual analytics and reporting',
+    status: 'pending',
+    icon: PieChart,
+    color: 'bg-orange-500',
+    lastSync: 'Setup required',
+  },
+  {
+    id: 11,
+    name: 'API Gateway',
+    description: 'Custom REST API integrations',
+    status: 'connected',
+    icon: Plug,
+    color: 'bg-indigo-500',
+    lastSync: 'Active',
+  },
+  {
+    id: 12,
+    name: 'Snowflake',
+    description: 'Cloud data warehouse integration',
+    status: 'connected',
+    icon: Database,
+    color: 'bg-sky-500',
+    lastSync: '10 mins ago',
+  },
+];
+
 const recentActivities = [
   { id: 1, type: 'risk_added', title: 'New risk identified', description: 'API Security Vulnerability added by Mike Johnson', time: '2 hours ago', icon: Shield },
   { id: 2, type: 'status_change', title: 'Status updated', description: 'Supply Chain Disruption moved to "Mitigating"', time: '4 hours ago', icon: Activity },
@@ -523,6 +641,133 @@ export function Dashboard() {
                     ))}
                 </div>
               </Card>
+            </div>
+          </div>
+
+          {/* Scrolling Case Studies Section */}
+          <div className="mt-8">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-display font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                <FileText className="w-5 h-5 text-lumina-600" />
+                Success Stories & Case Studies
+              </h3>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentCaseIndex((prev) => (prev - 1 + caseStudies.length) % caseStudies.length)}
+                  className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setIsAutoPlaying(!isAutoPlaying)}
+                  className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors"
+                >
+                  {isAutoPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                </button>
+                <button
+                  onClick={() => setCurrentCaseIndex((prev) => (prev + 1) % caseStudies.length)}
+                  className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800">
+              <div
+                className="flex transition-transform duration-500 ease-in-out"
+                style={{ transform: `translateX(-${currentCaseIndex * 100}%)` }}
+              >
+                {caseStudies.map((study) => (
+                  <div key={study.id} className="w-full flex-shrink-0 p-6 md:p-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-center">
+                      <div className="lg:col-span-3 text-white">
+                        <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-lumina-500/30 text-lumina-300 mb-3">
+                          {study.industry}
+                        </span>
+                        <h4 className="text-xl md:text-2xl font-display font-bold mb-2">{study.title}</h4>
+                        <p className="text-white/60 text-sm mb-3">{study.company}</p>
+                        <div className="mb-4">
+                          <p className="text-sm text-white/70">{study.challenge}</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {study.results.map((result, idx) => (
+                            <span key={idx} className="px-3 py-1 rounded-full text-xs bg-emerald-500/20 text-emerald-300">
+                              {result}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="lg:col-span-2 hidden md:block">
+                        <img
+                          src={study.image}
+                          alt={study.title}
+                          className="w-full h-48 object-cover rounded-xl opacity-80"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Carousel Dots */}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                {caseStudies.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentCaseIndex(idx)}
+                    className={`w-2 h-2 rounded-full transition-colors ${
+                      idx === currentCaseIndex ? 'bg-white' : 'bg-white/30'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Platform Integrations Section */}
+          <div className="mt-8">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-display font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                <Link2 className="w-5 h-5 text-lumina-600" />
+                Platform Integrations
+              </h3>
+              <button className="text-sm text-lumina-600 dark:text-lumina-400 hover:underline flex items-center gap-1">
+                View All <ExternalLink className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {platformIntegrations.map((platform) => {
+                const Icon = platform.icon;
+                return (
+                  <Card key={platform.id} padding="none" className="group hover:shadow-lg transition-all cursor-pointer">
+                    <div className="p-4 text-center">
+                      <div className={`w-12 h-12 mx-auto rounded-xl ${platform.color} text-white flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
+                        <Icon className="w-6 h-6" />
+                      </div>
+                      <h4 className="font-medium text-slate-900 dark:text-white text-sm mb-1 truncate">
+                        {platform.name}
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate mb-2">
+                        {platform.description}
+                      </p>
+                      <div className="flex items-center justify-center gap-1">
+                        <span className={`w-2 h-2 rounded-full ${
+                          platform.status === 'connected' ? 'bg-emerald-500' : 'bg-amber-500'
+                        }`} />
+                        <span className={`text-xs ${
+                          platform.status === 'connected'
+                            ? 'text-emerald-600 dark:text-emerald-400'
+                            : 'text-amber-600 dark:text-amber-400'
+                        }`}>
+                          {platform.lastSync}
+                        </span>
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
             </div>
           </div>
         </>

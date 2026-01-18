@@ -14,6 +14,7 @@ import { Alerts } from './pages/Alerts';
 import { Analytics } from './pages/Analytics';
 import { Reports } from './pages/Reports';
 import { AICoach } from './pages/AICoach';
+import { RiskFrameworks } from './pages/RiskFrameworks';
 import { Team } from './pages/Team';
 import { Settings } from './pages/Settings';
 
@@ -82,6 +83,14 @@ function App() {
         element={
           <ProtectedRoute>
             <AICoach />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/frameworks"
+        element={
+          <ProtectedRoute>
+            <RiskFrameworks />
           </ProtectedRoute>
         }
       />

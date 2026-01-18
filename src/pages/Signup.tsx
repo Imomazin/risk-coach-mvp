@@ -54,7 +54,13 @@ export function Signup() {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       if (formData.name && formData.email && formData.password) {
-        login({ email: formData.email, name: formData.name });
+        const isAdmin = formData.email.toLowerCase().includes('admin');
+        login({
+          email: formData.email,
+          name: formData.name,
+          role: isAdmin ? 'admin' : 'user',
+          provider: 'email',
+        });
         navigate('/');
       } else {
         setError('Please fill in all required fields');

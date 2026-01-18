@@ -17,6 +17,9 @@ import {
   Sparkles,
   LogOut,
   Layers,
+  Database,
+  Plug,
+  UserCog,
 } from 'lucide-react';
 
 interface NavItem {
@@ -31,13 +34,16 @@ const mainNavItems: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/' },
   { id: 'risks', label: 'Risk Register', icon: Shield, path: '/risks', badge: 8 },
   { id: 'frameworks', label: 'Risk Frameworks', icon: Layers, path: '/frameworks' },
+  { id: 'data-analysis', label: 'Data Analysis', icon: Database, path: '/data-analysis' },
   { id: 'alerts', label: 'Alerts', icon: AlertTriangle, path: '/alerts', badge: 3 },
   { id: 'analytics', label: 'Analytics', icon: TrendingUp, path: '/analytics' },
   { id: 'reports', label: 'Reports', icon: FileText, path: '/reports' },
   { id: 'ai-coach', label: 'AI Risk Advisor', icon: Sparkles, path: '/ai-coach' },
+  { id: 'api-gateway', label: 'API Gateway', icon: Plug, path: '/api-gateway' },
 ];
 
 const secondaryNavItems: NavItem[] = [
+  { id: 'admin', label: 'Admin Panel', icon: UserCog, path: '/admin' },
   { id: 'team', label: 'Team', icon: Users, path: '/team' },
   { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
   { id: 'help', label: 'Help & Support', icon: HelpCircle, path: '/help' },

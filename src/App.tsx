@@ -17,6 +17,9 @@ import { AICoach } from './pages/AICoach';
 import { RiskFrameworks } from './pages/RiskFrameworks';
 import { Team } from './pages/Team';
 import { Settings } from './pages/Settings';
+import { Admin } from './pages/Admin';
+import { DataAnalysis } from './pages/DataAnalysis';
+import { APIGateway } from './pages/APIGateway';
 
 function App() {
   const { isAuthenticated } = useAuth();
@@ -115,6 +118,30 @@ function App() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute>
+            <Admin />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/data-analysis"
+        element={
+          <ProtectedRoute>
+            <DataAnalysis />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/api-gateway"
+        element={
+          <ProtectedRoute>
+            <APIGateway />
           </ProtectedRoute>
         }
       />

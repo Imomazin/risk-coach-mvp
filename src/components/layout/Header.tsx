@@ -17,9 +17,9 @@ export function Header({ title, subtitle }: HeaderProps) {
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   const themeOptions = [
-    { id: 'light', label: 'Light', icon: Sun, description: 'Light theme' },
-    { id: 'dark', label: 'Dark', icon: Moon, description: 'Dark slate theme' },
     { id: 'black', label: 'Black', icon: Circle, description: 'True black OLED' },
+    { id: 'dark', label: 'Dark', icon: Moon, description: 'Dark slate theme' },
+    { id: 'light', label: 'Light', icon: Sun, description: 'Light mode' },
   ] as const;
 
   return (

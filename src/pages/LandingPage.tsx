@@ -9,93 +9,45 @@ import {
   ArrowRight,
   BarChart3,
   Bell,
-  Users,
-  Lock,
-  Play,
-  CheckCircle2,
-  Target,
-  Layers,
   Sun,
   Moon,
   Circle,
-  ChevronRight,
+  CheckCircle2,
+  Target,
+  Layers,
   Menu,
   X,
+  ChevronRight,
 } from 'lucide-react';
 
 const features = [
   {
     icon: Shield,
-    title: 'Risk Register',
-    description: 'Comprehensive tracking of all identified risks with probability and impact scoring.',
+    title: 'Risk Intelligence',
+    description: 'AI-powered risk identification and assessment',
   },
   {
     icon: BarChart3,
     title: 'Visual Analytics',
-    description: 'Heat maps, trend charts, and dashboards that make risk data actionable.',
+    description: 'Interactive dashboards and heat maps',
   },
   {
     icon: Sparkles,
-    title: 'AI Risk Coach',
-    description: 'Intelligent recommendations and insights powered by advanced AI.',
+    title: 'AI Advisor',
+    description: 'Intelligent recommendations and insights',
   },
   {
     icon: Bell,
     title: 'Smart Alerts',
-    description: 'Real-time notifications for risk escalations, deadlines, and status changes.',
+    description: 'Real-time risk notifications',
   },
-  {
-    icon: Users,
-    title: 'Team Collaboration',
-    description: 'Assign risk owners, track mitigation progress, and collaborate seamlessly.',
-  },
-  {
-    icon: Lock,
-    title: 'Compliance Ready',
-    description: 'Built-in templates for regulatory compliance and audit trails.',
-  },
-];
-
-const stats = [
-  { value: '10,000+', label: 'Risks Managed' },
-  { value: '500+', label: 'Companies Trust Us' },
-  { value: '98%', label: 'Customer Satisfaction' },
-  { value: '40%', label: 'Risk Reduction' },
 ];
 
 const frameworks = [
-  { name: 'Monte Carlo', icon: BarChart3, description: 'Probabilistic simulation' },
-  { name: 'Bow-Tie Analysis', icon: Layers, description: 'Cause-effect mapping' },
-  { name: 'FMEA', icon: Target, description: 'Failure mode analysis' },
-  { name: 'Risk Matrix', icon: Shield, description: '5x5 assessment grid' },
-];
-
-const testimonials = [
-  {
-    quote: "Lumina R transformed how we manage operational risks. The AI coach alone saved us countless hours.",
-    author: 'Sarah Chen',
-    role: 'Chief Risk Officer',
-    company: 'TechCorp Inc.',
-    image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
-  },
-  {
-    quote: "Finally, a risk management platform that's actually intuitive. Our team adopted it within days.",
-    author: 'Michael Roberts',
-    role: 'Operations Director',
-    company: 'Global Manufacturing Co.',
-    image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100',
-  },
-  {
-    quote: "The visual heat maps and analytics give our board exactly the insights they need.",
-    author: 'Emily Watson',
-    role: 'CEO',
-    company: 'StartupVentures',
-    image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100',
-  },
-];
-
-const integrations = [
-  'ServiceNow', 'SAP GRC', 'Splunk', 'Microsoft 365', 'Jira', 'Power BI'
+  { name: 'Monte Carlo', icon: BarChart3 },
+  { name: 'Bow-Tie', icon: Layers },
+  { name: 'FMEA', icon: Target },
+  { name: 'Risk Matrix', icon: Shield },
 ];
 
 export function LandingPage() {
@@ -111,80 +63,80 @@ export function LandingPage() {
   }, []);
 
   const isDark = resolvedTheme === 'dark' || resolvedTheme === 'black';
+  const isBlack = resolvedTheme === 'black';
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-slate-950 text-white' : 'bg-white text-slate-900'}`}>
-      {/* Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+    <div className={`min-h-screen ${isBlack ? 'bg-black text-white' : isDark ? 'bg-slate-950 text-white' : 'bg-white text-slate-900'}`}>
+      {/* Navigation - Minimal */}
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         scrolled
-          ? isDark
-            ? 'bg-slate-950/90 backdrop-blur-xl border-b border-slate-800'
-            : 'bg-white/90 backdrop-blur-xl border-b border-slate-100'
+          ? isBlack
+            ? 'bg-black/95 backdrop-blur-xl border-b border-white/5'
+            : isDark
+              ? 'bg-slate-950/95 backdrop-blur-xl border-b border-slate-800'
+              : 'bg-white/95 backdrop-blur-xl border-b border-slate-100'
           : 'bg-transparent'
       }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 md:h-20">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex items-center justify-between h-20">
             <Logo />
 
-            {/* Desktop Nav */}
+            {/* Desktop Nav - Minimal */}
             <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className={`text-sm font-medium ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'} transition-colors`}>
+              <a href="#features" className={`text-sm ${isDark ? 'text-white/60 hover:text-white' : 'text-slate-500 hover:text-slate-900'} transition-colors`}>
                 Features
               </a>
-              <a href="#frameworks" className={`text-sm font-medium ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'} transition-colors`}>
+              <a href="#frameworks" className={`text-sm ${isDark ? 'text-white/60 hover:text-white' : 'text-slate-500 hover:text-slate-900'} transition-colors`}>
                 Frameworks
-              </a>
-              <a href="#testimonials" className={`text-sm font-medium ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'} transition-colors`}>
-                Testimonials
-              </a>
-              <a href="#integrations" className={`text-sm font-medium ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'} transition-colors`}>
-                Integrations
               </a>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               {/* Theme Toggle */}
               <div className="relative">
                 <button
                   onClick={() => setShowThemeMenu(!showThemeMenu)}
-                  className={`p-2 rounded-xl transition-colors ${
+                  className={`p-2.5 rounded-full transition-all ${
                     isDark
-                      ? 'text-slate-400 hover:text-white hover:bg-slate-800'
-                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                      ? 'text-white/60 hover:text-white hover:bg-white/10'
+                      : 'text-slate-400 hover:text-slate-900 hover:bg-slate-100'
                   }`}
                 >
-                  {resolvedTheme === 'dark' ? <Moon className="w-5 h-5" /> :
-                   resolvedTheme === 'black' ? <Circle className="w-5 h-5 fill-current" /> :
+                  {resolvedTheme === 'black' ? <Circle className="w-5 h-5 fill-current" /> :
+                   resolvedTheme === 'dark' ? <Moon className="w-5 h-5" /> :
                    <Sun className="w-5 h-5" />}
                 </button>
 
                 {showThemeMenu && (
                   <>
                     <div className="fixed inset-0" onClick={() => setShowThemeMenu(false)} />
-                    <div className={`absolute right-0 mt-2 w-40 rounded-xl shadow-xl border overflow-hidden ${
-                      isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+                    <div className={`absolute right-0 mt-2 w-44 rounded-2xl shadow-2xl border overflow-hidden ${
+                      isBlack ? 'bg-zinc-900 border-white/10' : isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'
                     }`}>
                       {[
-                        { id: 'light', label: 'Light', icon: Sun },
-                        { id: 'dark', label: 'Dark', icon: Moon },
-                        { id: 'black', label: 'Black', icon: Circle },
+                        { id: 'black', label: 'Black', icon: Circle, desc: 'OLED Black' },
+                        { id: 'dark', label: 'Dark', icon: Moon, desc: 'Dark Slate' },
+                        { id: 'light', label: 'Light', icon: Sun, desc: 'Light Mode' },
                       ].map((option) => {
                         const Icon = option.icon;
                         return (
                           <button
                             key={option.id}
                             onClick={() => { setTheme(option.id as 'light' | 'dark' | 'black'); setShowThemeMenu(false); }}
-                            className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
+                            className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-all ${
                               theme === option.id
-                                ? 'bg-lumina-500/10 text-lumina-500'
+                                ? 'bg-lumina-500/20 text-lumina-400'
                                 : isDark
-                                  ? 'text-slate-300 hover:bg-slate-800'
-                                  : 'text-slate-700 hover:bg-slate-50'
+                                  ? 'text-white/80 hover:bg-white/5'
+                                  : 'text-slate-600 hover:bg-slate-50'
                             }`}
                           >
                             <Icon className={`w-4 h-4 ${option.id === 'black' ? 'fill-current' : ''}`} />
-                            {option.label}
-                            {theme === option.id && <CheckCircle2 className="w-4 h-4 ml-auto" />}
+                            <div className="flex-1 text-left">
+                              <p className="font-medium">{option.label}</p>
+                              <p className={`text-xs ${isDark ? 'text-white/40' : 'text-slate-400'}`}>{option.desc}</p>
+                            </div>
+                            {theme === option.id && <CheckCircle2 className="w-4 h-4 text-lumina-500" />}
                           </button>
                         );
                       })}
@@ -194,16 +146,17 @@ export function LandingPage() {
               </div>
 
               <Link to="/login" className="hidden sm:block">
-                <Button variant={isDark ? 'ghost' : 'ghost'} size="md">Log in</Button>
+                <Button variant="ghost" size="sm" className={isDark ? 'text-white/70 hover:text-white' : ''}>
+                  Sign in
+                </Button>
               </Link>
               <Link to="/signup">
-                <Button variant="primary" size="md">
+                <Button variant="primary" size="sm">
                   Get Started
-                  <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
 
-              {/* Mobile menu button */}
+              {/* Mobile menu */}
               <button
                 className="md:hidden p-2"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -216,177 +169,144 @@ export function LandingPage() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className={`md:hidden border-t ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-100'}`}>
-            <div className="px-4 py-4 space-y-2">
-              {['Features', 'Frameworks', 'Testimonials', 'Integrations'].map((item) => (
-                <a
-                  key={item}
-                  href={`#${item.toLowerCase()}`}
-                  className={`block py-2 text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {item}
-                </a>
-              ))}
-              <Link to="/login" className="block py-2 text-sm font-medium text-lumina-500">
-                Log in
+          <div className={`md:hidden border-t ${isBlack ? 'bg-black border-white/5' : isDark ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-100'}`}>
+            <div className="px-6 py-4 space-y-3">
+              <a href="#features" className={`block text-sm ${isDark ? 'text-white/60' : 'text-slate-600'}`} onClick={() => setMobileMenuOpen(false)}>
+                Features
+              </a>
+              <a href="#frameworks" className={`block text-sm ${isDark ? 'text-white/60' : 'text-slate-600'}`} onClick={() => setMobileMenuOpen(false)}>
+                Frameworks
+              </a>
+              <Link to="/login" className="block text-sm text-lumina-500" onClick={() => setMobileMenuOpen(false)}>
+                Sign in
               </Link>
             </div>
           </div>
         )}
       </nav>
 
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center pt-20 pb-32 px-4 sm:px-6 lg:px-8 overflow-hidden">
-        {/* Animated Background */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className={`absolute top-1/4 -left-1/4 w-96 h-96 rounded-full blur-3xl ${isDark ? 'bg-lumina-500/20' : 'bg-lumina-500/10'}`} />
-          <div className={`absolute bottom-1/4 -right-1/4 w-96 h-96 rounded-full blur-3xl ${isDark ? 'bg-violet-500/20' : 'bg-violet-500/10'}`} />
-          <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-3xl ${isDark ? 'bg-lumina-600/5' : 'bg-lumina-600/5'}`} />
+      {/* Hero - Minimal & Elegant */}
+      <section className="min-h-screen flex items-center justify-center px-6 relative overflow-hidden">
+        {/* Subtle gradient orbs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className={`absolute top-1/3 left-1/4 w-[600px] h-[600px] rounded-full blur-[120px] ${
+            isBlack ? 'bg-lumina-600/10' : isDark ? 'bg-lumina-500/15' : 'bg-lumina-500/20'
+          }`} />
+          <div className={`absolute bottom-1/3 right-1/4 w-[400px] h-[400px] rounded-full blur-[100px] ${
+            isBlack ? 'bg-violet-600/10' : isDark ? 'bg-violet-500/15' : 'bg-violet-500/15'
+          }`} />
         </div>
 
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-            {/* Left - Content */}
-            <div className="text-center lg:text-left">
-              {/* Badge */}
-              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 ${
-                isDark ? 'bg-lumina-500/10 border border-lumina-500/20' : 'bg-lumina-50 border border-lumina-200'
-              }`}>
-                <Sparkles className="w-4 h-4 text-lumina-500" />
-                <span className={`text-sm font-medium ${isDark ? 'text-lumina-400' : 'text-lumina-700'}`}>
-                  AI-Powered Risk Intelligence
-                </span>
-              </div>
+        <div className="max-w-4xl mx-auto text-center relative z-10">
+          {/* Small badge */}
+          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 ${
+            isBlack ? 'bg-white/5 border border-white/10' : isDark ? 'bg-lumina-500/10 border border-lumina-500/20' : 'bg-lumina-50 border border-lumina-200'
+          }`}>
+            <Sparkles className="w-4 h-4 text-lumina-500" />
+            <span className={`text-sm font-medium ${isDark ? 'text-lumina-400' : 'text-lumina-700'}`}>
+              AI-Powered Risk Intelligence
+            </span>
+          </div>
 
-              {/* Headline */}
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-bold leading-tight mb-6">
-                Master Your Risks with{' '}
-                <span className="bg-gradient-to-r from-lumina-500 to-violet-500 bg-clip-text text-transparent">
-                  Intelligent Insights
-                </span>
-              </h1>
+          {/* Main headline */}
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-display font-bold leading-[1.1] tracking-tight mb-6">
+            Risk Management
+            <br />
+            <span className="bg-gradient-to-r from-lumina-400 via-lumina-500 to-violet-500 bg-clip-text text-transparent">
+              Reimagined
+            </span>
+          </h1>
 
-              {/* Subheadline */}
-              <p className={`text-lg lg:text-xl mb-8 max-w-xl mx-auto lg:mx-0 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                Lumina R helps organizations identify, assess, and mitigate risks with AI-powered
-                recommendations and real-time monitoring.
-              </p>
+          {/* Subheadline */}
+          <p className={`text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed ${
+            isBlack ? 'text-white/50' : isDark ? 'text-slate-400' : 'text-slate-600'
+          }`}>
+            Lumina R helps organizations identify, assess, and mitigate risks
+            with intelligent AI insights and real-time monitoring.
+          </p>
 
-              {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-12">
-                <Link to="/signup">
-                  <Button variant="primary" size="lg" className="px-8 py-4 text-base">
-                    Start Free Trial
-                    <ArrowRight className="w-5 h-5" />
-                  </Button>
-                </Link>
-                <Button
-                  variant="secondary"
-                  size="lg"
-                  className={`px-8 py-4 text-base ${isDark ? 'border-slate-700 hover:bg-slate-800' : ''}`}
-                >
-                  <Play className="w-5 h-5" />
-                  Watch Demo
-                </Button>
-              </div>
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+            <Link to="/signup">
+              <Button variant="primary" size="lg" className="px-8 min-w-[200px]">
+                Start Free Trial
+                <ArrowRight className="w-5 h-5" />
+              </Button>
+            </Link>
+            <Link to="/login">
+              <Button
+                variant="secondary"
+                size="lg"
+                className={`px-8 min-w-[200px] ${
+                  isBlack ? 'border-white/10 hover:bg-white/5' : isDark ? 'border-slate-700 hover:bg-slate-800' : ''
+                }`}
+              >
+                Sign In
+                <ChevronRight className="w-5 h-5" />
+              </Button>
+            </Link>
+          </div>
 
-              {/* Stats Row */}
-              <div className="flex items-center justify-center lg:justify-start gap-8">
-                {stats.slice(0, 3).map((stat) => (
-                  <div key={stat.label} className="text-center lg:text-left">
-                    <p className="text-2xl font-bold text-lumina-500">{stat.value}</p>
-                    <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{stat.label}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+          {/* Trust indicators */}
+          <div className={`flex items-center justify-center gap-8 text-sm ${
+            isBlack ? 'text-white/30' : isDark ? 'text-slate-600' : 'text-slate-400'
+          }`}>
+            <span>500+ Companies</span>
+            <span className="w-1 h-1 rounded-full bg-current" />
+            <span>10K+ Risks Managed</span>
+            <span className="w-1 h-1 rounded-full bg-current" />
+            <span>98% Satisfaction</span>
+          </div>
+        </div>
 
-            {/* Right - Dashboard Preview */}
-            <div className="relative">
-              <div className={`absolute inset-0 rounded-3xl blur-2xl ${isDark ? 'bg-lumina-500/20' : 'bg-lumina-500/10'}`} />
-              <div className={`relative rounded-2xl overflow-hidden shadow-2xl ${isDark ? 'shadow-lumina-500/10' : 'shadow-lumina-500/20'}`}>
-                <div className={`${isDark ? 'bg-slate-900' : 'bg-slate-100'} p-1`}>
-                  {/* Browser chrome */}
-                  <div className="flex items-center gap-2 px-4 py-3">
-                    <div className="flex gap-1.5">
-                      <div className="w-3 h-3 rounded-full bg-red-500" />
-                      <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                      <div className="w-3 h-3 rounded-full bg-green-500" />
-                    </div>
-                    <div className="flex-1 flex justify-center">
-                      <div className={`px-4 py-1 rounded-lg text-xs ${isDark ? 'bg-slate-800 text-slate-400' : 'bg-white text-slate-400'}`}>
-                        app.lumina-r.io/dashboard
-                      </div>
-                    </div>
-                  </div>
-                  {/* Dashboard mockup */}
-                  <div className={`${isDark ? 'bg-slate-950' : 'bg-white'} aspect-[4/3] p-6`}>
-                    <div className="grid grid-cols-4 gap-4 mb-6">
-                      {['Total Risks', 'Critical', 'KRIs Active', 'Mitigated'].map((label, i) => (
-                        <div key={label} className={`p-4 rounded-xl ${isDark ? 'bg-slate-900' : 'bg-slate-50'}`}>
-                          <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{label}</p>
-                          <p className={`text-2xl font-bold ${i === 1 ? 'text-red-500' : i === 3 ? 'text-emerald-500' : isDark ? 'text-white' : 'text-slate-900'}`}>
-                            {[42, 8, 24, 28][i]}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                    <div className={`h-32 rounded-xl ${isDark ? 'bg-slate-900' : 'bg-slate-50'} flex items-center justify-center`}>
-                      <div className="grid grid-cols-5 gap-2">
-                        {[...Array(25)].map((_, i) => (
-                          <div
-                            key={i}
-                            className={`w-6 h-6 rounded ${
-                              i < 5 ? 'bg-red-500/80' :
-                              i < 10 ? 'bg-amber-500/80' :
-                              i < 15 ? 'bg-yellow-500/80' :
-                              'bg-emerald-500/80'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+        {/* Scroll indicator */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
+          <div className={`w-6 h-10 rounded-full border-2 flex justify-center pt-2 ${
+            isBlack ? 'border-white/20' : isDark ? 'border-slate-700' : 'border-slate-300'
+          }`}>
+            <div className={`w-1.5 h-2.5 rounded-full animate-bounce ${
+              isBlack ? 'bg-white/40' : isDark ? 'bg-slate-500' : 'bg-slate-400'
+            }`} />
           </div>
         </div>
       </section>
 
-      {/* Frameworks Section */}
-      <section id="frameworks" className={`py-24 px-4 sm:px-6 lg:px-8 ${isDark ? 'bg-slate-900/50' : 'bg-slate-50'}`}>
-        <div className="max-w-7xl mx-auto">
+      {/* Features - Clean Grid */}
+      <section id="features" className={`py-32 px-6 ${
+        isBlack ? 'bg-zinc-950' : isDark ? 'bg-slate-900/50' : 'bg-slate-50'
+      }`}>
+        <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-display font-bold mb-4">
-              Professional Risk Frameworks
+              Powerful Features
             </h2>
-            <p className={`text-lg max-w-2xl mx-auto ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-              Industry-standard methodologies built-in and ready to use
+            <p className={`text-lg ${isBlack ? 'text-white/50' : isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+              Everything you need to manage risk effectively
             </p>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            {frameworks.map((framework) => {
-              const Icon = framework.icon;
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {features.map((feature) => {
+              const Icon = feature.icon;
               return (
                 <div
-                  key={framework.name}
-                  className={`p-6 rounded-2xl border transition-all hover:scale-105 cursor-pointer group ${
-                    isDark
-                      ? 'bg-slate-900 border-slate-800 hover:border-lumina-500/50'
-                      : 'bg-white border-slate-200 hover:border-lumina-300 hover:shadow-lg'
+                  key={feature.title}
+                  className={`p-8 rounded-2xl border transition-all hover:scale-[1.02] ${
+                    isBlack
+                      ? 'bg-zinc-900 border-white/5 hover:border-white/10'
+                      : isDark
+                        ? 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                        : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-lg'
                   }`}
                 >
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${
-                    isDark ? 'bg-lumina-500/10' : 'bg-lumina-50'
-                  } group-hover:bg-lumina-500 transition-colors`}>
-                    <Icon className={`w-6 h-6 text-lumina-500 group-hover:text-white transition-colors`} />
+                    isBlack ? 'bg-lumina-500/10' : isDark ? 'bg-lumina-500/10' : 'bg-lumina-50'
+                  }`}>
+                    <Icon className="w-6 h-6 text-lumina-500" />
                   </div>
-                  <h3 className="font-semibold mb-1">{framework.name}</h3>
-                  <p className={`text-sm ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
-                    {framework.description}
+                  <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+                  <p className={isBlack ? 'text-white/50' : isDark ? 'text-slate-400' : 'text-slate-600'}>
+                    {feature.description}
                   </p>
                 </div>
               );
@@ -395,37 +315,34 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="py-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
+      {/* Frameworks - Horizontal */}
+      <section id="frameworks" className="py-32 px-6">
+        <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-display font-bold mb-4">
-              Everything you need to manage risk
+              Professional Frameworks
             </h2>
-            <p className={`text-lg max-w-2xl mx-auto ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-              Powerful features designed for modern risk management teams
+            <p className={`text-lg ${isBlack ? 'text-white/50' : isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+              Industry-standard methodologies built-in
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature) => {
-              const Icon = feature.icon;
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            {frameworks.map((framework) => {
+              const Icon = framework.icon;
               return (
                 <div
-                  key={feature.title}
-                  className={`p-6 rounded-2xl border transition-all hover:border-lumina-300 group ${
-                    isDark
-                      ? 'bg-slate-900/50 border-slate-800 hover:shadow-lg hover:shadow-lumina-500/5'
-                      : 'bg-white border-slate-200 hover:shadow-lg hover:shadow-lumina-500/10'
+                  key={framework.name}
+                  className={`flex items-center gap-3 px-6 py-4 rounded-full border transition-all hover:scale-105 ${
+                    isBlack
+                      ? 'bg-zinc-900 border-white/5 hover:border-lumina-500/30'
+                      : isDark
+                        ? 'bg-slate-900 border-slate-800 hover:border-lumina-500/50'
+                        : 'bg-white border-slate-200 hover:border-lumina-300 hover:shadow-md'
                   }`}
                 >
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors ${
-                    isDark ? 'bg-lumina-500/10 group-hover:bg-lumina-500/20' : 'bg-lumina-50 group-hover:bg-lumina-100'
-                  }`}>
-                    <Icon className="w-6 h-6 text-lumina-500" />
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-                  <p className={isDark ? 'text-slate-400' : 'text-slate-600'}>{feature.description}</p>
+                  <Icon className="w-5 h-5 text-lumina-500" />
+                  <span className="font-medium">{framework.name}</span>
                 </div>
               );
             })}
@@ -433,142 +350,48 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section id="testimonials" className={`py-24 px-4 sm:px-6 lg:px-8 ${isDark ? 'bg-slate-900/50' : 'bg-slate-50'}`}>
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-display font-bold mb-4">
-              Loved by risk professionals
+      {/* CTA - Simple */}
+      <section className="py-32 px-6">
+        <div className="max-w-3xl mx-auto text-center">
+          <div className={`p-12 sm:p-16 rounded-3xl ${
+            isBlack
+              ? 'bg-gradient-to-br from-lumina-600/20 to-violet-600/20 border border-white/5'
+              : 'bg-gradient-to-br from-lumina-600 to-violet-600'
+          }`}>
+            <h2 className={`text-3xl sm:text-4xl font-display font-bold mb-4 ${isBlack ? '' : 'text-white'}`}>
+              Ready to get started?
             </h2>
-            <p className={`text-lg ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-              See what our customers have to say
+            <p className={`text-lg mb-8 ${isBlack ? 'text-white/60' : 'text-white/80'}`}>
+              Start your 14-day free trial. No credit card required.
             </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, i) => (
-              <div
-                key={i}
-                className={`p-6 rounded-2xl border ${
-                  isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
-                }`}
+            <Link to="/signup">
+              <Button
+                variant={isBlack ? 'primary' : 'secondary'}
+                size="lg"
+                className={isBlack ? '' : 'bg-white text-lumina-700 hover:bg-lumina-50 border-0'}
               >
-                <div className="flex gap-1 mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <svg key={i} className="w-5 h-5 text-amber-400 fill-current" viewBox="0 0 20 20">
-                      <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
-                    </svg>
-                  ))}
-                </div>
-                <p className={`mb-6 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>"{testimonial.quote}"</p>
-                <div className="flex items-center gap-3">
-                  <img
-                    src={testimonial.image}
-                    alt={testimonial.author}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                  <div>
-                    <p className="font-medium">{testimonial.author}</p>
-                    <p className={`text-sm ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
-                      {testimonial.role}, {testimonial.company}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
+                Start Free Trial
+                <ArrowRight className="w-5 h-5" />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* Integrations Section */}
-      <section id="integrations" className="py-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-4xl font-display font-bold mb-4">
-            Seamless Integrations
-          </h2>
-          <p className={`text-lg mb-12 max-w-2xl mx-auto ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-            Connect with your existing tools and platforms
+      {/* Footer - Minimal */}
+      <footer className={`py-8 px-6 border-t ${
+        isBlack ? 'border-white/5' : isDark ? 'border-slate-800' : 'border-slate-200'
+      }`}>
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Logo />
+            <span className={`text-sm ${isBlack ? 'text-white/30' : isDark ? 'text-slate-600' : 'text-slate-400'}`}>
+              Part of the Lumina Family
+            </span>
+          </div>
+          <p className={`text-sm ${isBlack ? 'text-white/30' : isDark ? 'text-slate-600' : 'text-slate-400'}`}>
+            © 2025 Lumina R
           </p>
-
-          <div className="flex flex-wrap items-center justify-center gap-8">
-            {integrations.map((name) => (
-              <div
-                key={name}
-                className={`px-6 py-4 rounded-xl border ${
-                  isDark
-                    ? 'bg-slate-900 border-slate-800'
-                    : 'bg-white border-slate-200'
-                }`}
-              >
-                <span className={`font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{name}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="p-12 rounded-3xl bg-gradient-to-br from-lumina-600 to-violet-600 text-white text-center relative overflow-hidden">
-            <div className="absolute inset-0 opacity-20">
-              <div className="absolute top-0 left-0 w-64 h-64 bg-white rounded-full blur-3xl" />
-              <div className="absolute bottom-0 right-0 w-64 h-64 bg-white rounded-full blur-3xl" />
-            </div>
-            <div className="relative z-10">
-              <h2 className="text-3xl sm:text-4xl font-display font-bold mb-4">
-                Ready to take control of your risks?
-              </h2>
-              <p className="text-lg text-white/80 mb-8 max-w-2xl mx-auto">
-                Join hundreds of companies using Lumina R to build resilient organizations.
-                Start your 14-day free trial today.
-              </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link to="/signup">
-                  <Button
-                    variant="secondary"
-                    size="lg"
-                    className="bg-white text-lumina-700 hover:bg-lumina-50 border-0"
-                  >
-                    Start Free Trial
-                    <ArrowRight className="w-5 h-5" />
-                  </Button>
-                </Link>
-                <Link to="/login">
-                  <Button
-                    variant="ghost"
-                    size="lg"
-                    className="text-white hover:bg-white/10 border-white/20"
-                  >
-                    Sign In
-                    <ChevronRight className="w-5 h-5" />
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className={`py-12 border-t px-4 sm:px-6 lg:px-8 ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <Logo />
-              <span className={`${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
-                Part of the Lumina Product Family
-              </span>
-            </div>
-            <div className="flex items-center gap-6">
-              <a href="#" className={`text-sm ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}>Privacy</a>
-              <a href="#" className={`text-sm ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}>Terms</a>
-              <a href="#" className={`text-sm ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}>Contact</a>
-            </div>
-            <p className={`text-sm ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
-              © 2025 Lumina R. All rights reserved.
-            </p>
-          </div>
         </div>
       </footer>
     </div>

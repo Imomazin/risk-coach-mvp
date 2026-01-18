@@ -15,10 +15,10 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(() => {
     const stored = localStorage.getItem('lumina_r_theme');
-    return (stored as Theme) || 'system';
+    return (stored as Theme) || 'black';  // Default to black theme
   });
 
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark' | 'black'>('light');
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark' | 'black'>('black');
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -64,7 +64,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
 
   const toggleTheme = () => {
-    const themes: Theme[] = ['light', 'dark', 'black'];
+    const themes: Theme[] = ['black', 'dark', 'light'];  // Black/Dark first, Light as alternative
     const currentIndex = themes.indexOf(resolvedTheme);
     const nextIndex = (currentIndex + 1) % themes.length;
     setTheme(themes[nextIndex]);

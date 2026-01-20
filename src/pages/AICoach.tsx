@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Layout } from '../components/layout';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { generateAIResponse, type AIMessage } from '../services/openai';
 import {
   Sparkles,
   Send,
@@ -155,223 +156,21 @@ export function AICoach() {
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    const currentInput = input;
     setInput('');
     setIsTyping(true);
 
-    // Simulate AI response with more intelligent responses
-    setTimeout(() => {
-      const responses: Record<string, string> = {
-        default: `Based on my analysis of your risk register and current data:
+    try {
+      // Convert messages to AIMessage format for the API
+      const conversationHistory: AIMessage[] = messages
+        .filter((msg) => msg.role !== 'assistant' || msg.id !== '1') // Exclude initial greeting
+        .map((msg) => ({
+          role: msg.role,
+          content: msg.content,
+        }));
 
-**Key Findings:**
-1. You have **3 high-priority risks** requiring immediate attention
-2. The "Cybersecurity Breach" risk has the highest score (15/25)
-3. **2 mitigation actions** are overdue and need escalation
-
-**AI Recommendations:**
-• 🔴 **Urgent:** Schedule a review meeting for cybersecurity risk with IT security team
-• 🟠 **This Week:** Update supply chain risk assessment with latest vendor data
-• 🟡 **This Month:** Escalate compliance gap to senior management
-
-**Predictive Insight:**
-Based on trend analysis, I predict a 35% likelihood of the cybersecurity risk materializing in the next 90 days without additional controls.
-
-Would you like me to:
-1. Generate a detailed risk report?
-2. Create a mitigation action plan?
-3. Run a Monte Carlo simulation on potential impact?`,
-
-        risks: `## Top Priority Risks This Week
-
-Based on comprehensive analysis of your risk register, KRIs, and industry trends:
-
-### 1. 🔴 Cybersecurity Breach (Score: 15 - Critical)
-- **Status:** Actively mitigating
-- **Trend:** ↑ Increasing (up 20% this month)
-- **KRI Alert:** Patch compliance at 94% (threshold: 95%)
-- **Action:** Review penetration test results by Friday
-- **AI Confidence:** 92%
-
-### 2. 🟠 Supply Chain Disruption (Score: 12 - High)
-- **Status:** Under assessment
-- **Trend:** → Stable
-- **KRI Alert:** Supplier concentration at 25%
-- **Action:** Contact backup suppliers for critical components
-- **AI Confidence:** 87%
-
-### 3. 🟡 Regulatory Compliance Gap (Score: 10 - Medium-High)
-- **Status:** Pending review
-- **Trend:** ↑ Increasing
-- **KRI Alert:** Training completion at 88% (threshold: 95%)
-- **Action:** Complete compliance training rollout
-- **AI Confidence:** 85%
-
-**Want me to:**
-• Draft detailed mitigation plans for each?
-• Generate a risk briefing for leadership?
-• Run scenario analysis on combined impact?`,
-
-        mitigation: `## AI-Powered Mitigation Strategies for Supply Chain Risk
-
-I've analyzed your supply chain data, vendor information, and industry best practices to recommend:
-
-### Immediate Actions (Week 1-2)
-| Action | Owner | Priority | Cost Est. |
-|--------|-------|----------|-----------|
-| Identify backup suppliers | Procurement | Critical | $5K |
-| Increase safety stock 20% | Operations | High | $50K |
-| Establish supplier hotline | Vendor Mgmt | High | $2K |
-
-### Short-Term (Month 1-3)
-✅ Implement real-time supplier monitoring dashboard
-✅ Negotiate flexible contract terms with key vendors
-✅ Develop regional sourcing alternatives
-✅ Create supplier risk scoring model
-
-### Long-Term (3-12 months)
-📊 Diversify supplier base across 3+ geographic regions
-📊 Invest in supply chain visibility technology
-📊 Build strategic inventory reserves (30-day buffer)
-📊 Establish supplier development program
-
-**Estimated Risk Reduction:** 45-60%
-**ROI Timeline:** 6-8 months
-**AI Confidence Level:** 89%
-
-Would you like me to generate a detailed implementation plan with timelines?`,
-
-        simulate: `## Monte Carlo Simulation Results
-
-I've run **10,000 iterations** on your risk portfolio using your current risk data:
-
-### Financial Impact Distribution
-\`\`\`
-P5  (Best Case):     $1.2M
-P25 (Optimistic):    $1.8M
-P50 (Most Likely):   $2.5M  ← Expected Value
-P75 (Conservative):  $3.4M
-P95 (Worst Case):    $5.1M
-\`\`\`
-
-### Key Findings
-📈 **Value at Risk (95%):** $5.1M
-📊 **Expected Loss:** $2.5M
-📉 **Standard Deviation:** $1.2M
-⚠️ **Tail Risk:** 12% chance of losses > $4M
-
-### Risk Contribution Analysis
-| Risk | Contribution |
-|------|-------------|
-| Cybersecurity | 35% |
-| Supply Chain | 28% |
-| Compliance | 18% |
-| Market Risk | 12% |
-| Other | 7% |
-
-### Recommendation
-Based on this simulation, I recommend:
-1. **Increase cyber insurance coverage** to $5M minimum
-2. **Allocate $4.5M risk reserves** (P90 coverage)
-3. **Prioritize cybersecurity controls** (highest contributor)
-
-Want me to run sensitivity analysis or stress scenarios?`,
-
-        benchmark: `## Industry Benchmark Comparison
-
-I've compared your risk profile against **247 organizations** in your industry:
-
-### Overall Risk Maturity Score
-**Your Score: 3.4/5** (Above Average)
-Industry Average: 3.1/5
-
-### Category Comparison
-| Category | You | Industry | Status |
-|----------|-----|----------|--------|
-| Risk Governance | 4.2 | 3.5 | ✅ Above |
-| Risk Assessment | 3.8 | 3.4 | ✅ Above |
-| Risk Response | 3.0 | 3.2 | ⚠️ Below |
-| Monitoring | 3.2 | 2.8 | ✅ Above |
-| Technology | 2.8 | 3.1 | ❌ Below |
-
-### Strengths (Top Quartile)
-✅ Risk governance framework
-✅ KRI monitoring coverage
-✅ Board reporting frequency
-
-### Improvement Areas
-⚠️ Risk response time (you: 14 days, best: 7 days)
-⚠️ Technology/GRC tool maturity
-⚠️ Quantitative risk analysis adoption
-
-### Recommendations
-1. Invest in GRC technology platform
-2. Implement automated risk response workflows
-3. Expand quantitative risk modeling capabilities
-
-Would you like a detailed gap analysis report?`,
-
-        report: `## Auto-Generated Risk Report
-
-I've compiled a comprehensive risk summary based on your current data:
-
----
-
-### Executive Summary
-**Period:** January 2026
-**Overall Risk Level:** MODERATE-HIGH
-**Trend:** Stable with emerging concerns
-
-### Risk Dashboard
-- **Total Risks:** 24 active
-- **Critical/High:** 5 (21%)
-- **Medium:** 12 (50%)
-- **Low:** 7 (29%)
-
-### Key Highlights
-
-**🔴 Escalations Required**
-1. Cybersecurity breach risk requires board attention
-2. Two mitigation actions are overdue
-
-**🟢 Positive Developments**
-1. Operational risk reduced 15% through process improvements
-2. Three risks successfully mitigated and closed
-
-**📊 KRI Summary**
-- 18 KRIs within tolerance
-- 4 approaching threshold
-- 2 in breach status
-
-### Upcoming Milestones
-- Q4 Risk Review: Dec 20
-- Compliance Audit: Jan 15
-- Board Presentation: Feb 10
-
----
-
-**Report generated by Lumina R AI**
-*Confidence Level: 94%*
-
-Would you like me to:
-1. Export this as PDF?
-2. Add more detail to any section?
-3. Generate board presentation slides?`,
-      };
-
-      const lowerInput = input.toLowerCase();
-      let responseContent = responses.default;
-
-      if (lowerInput.includes('top') || lowerInput.includes('priority') || lowerInput.includes('focus')) {
-        responseContent = responses.risks;
-      } else if (lowerInput.includes('mitigation') || lowerInput.includes('supply chain') || lowerInput.includes('strategy')) {
-        responseContent = responses.mitigation;
-      } else if (lowerInput.includes('simulate') || lowerInput.includes('monte carlo') || lowerInput.includes('model')) {
-        responseContent = responses.simulate;
-      } else if (lowerInput.includes('benchmark') || lowerInput.includes('compare') || lowerInput.includes('industry')) {
-        responseContent = responses.benchmark;
-      } else if (lowerInput.includes('report') || lowerInput.includes('summary') || lowerInput.includes('board')) {
-        responseContent = responses.report;
-      }
+      // Call OpenAI API
+      const responseContent = await generateAIResponse(currentInput, conversationHistory);
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -381,11 +180,23 @@ Would you like me to:
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error('Error generating AI response:', error);
+
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: 'I apologize, but I encountered an error processing your request. Please try again or check your API configuration.',
+        timestamp: new Date(),
+      };
+
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
-    }, 2000);
+    }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -523,7 +334,7 @@ Would you like me to:
                   <textarea
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    onKeyPress={handleKeyPress}
+                    onKeyDown={handleKeyDown}
                     placeholder="Ask anything about your risks... (try 'simulate', 'benchmark', or 'report')"
                     rows={1}
                     className="w-full px-4 py-3 pr-24 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800

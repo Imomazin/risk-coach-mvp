@@ -8,6 +8,7 @@ import {
 } from '../components/dashboard';
 import { Card, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { useRiskIntelligence } from '../stores/RiskIntelligenceStore';
 import {
   Shield,
   AlertTriangle,

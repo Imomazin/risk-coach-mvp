@@ -1,8 +1,9 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import { Layout } from '../components/layout/Layout';
 import { ERMAnalysisPanel } from '../components/analysis/ERMAnalysisPanel';
 import { analyzeERMData, detectDataType } from '../utils/riskDataAnalyzer';
+import { useRiskIntelligence } from '../stores/RiskIntelligenceStore';
 import type { ERMAnalysisResult, ERMDataType } from '../types/riskData';
 import {
   Upload,
@@ -193,6 +194,9 @@ function getDataTypeInfo(type: ERMDataType): { label: string; color: string; des
 }
 
 export function DataAnalysis() {
+  // Access the unified risk intelligence store
+  const { loadFromAnalysis } = useRiskIntelligence();
+
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [selectedFile, setSelectedFile] = useState<UploadedFile | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -370,6 +374,12 @@ export function DataAnalysis() {
     // Run ERM analysis
     const analysisResult = analyzeERMData(selectedFile.data, selectedFile.columnNames, knownRiskIds);
 
+    // LOAD DATA INTO THE UNIFIED RISK INTELLIGENCE STORE
+    // This enables cross-pillar propagation to all other modules
+    if (selectedFile.ermDataType && selectedFile.ermDataType !== 'generic') {
+      loadFromAnalysis(selectedFile.ermDataType, selectedFile.data, selectedFile.columnNames);
+    }
+
     // Update file with analysis result
     const updatedFile = { ...selectedFile, analyzed: true, analysisResult };
     setFiles(prev => prev.map(f => f.id === selectedFile.id ? updatedFile : f));
@@ -377,6 +387,15 @@ export function DataAnalysis() {
 
     setIsAnalyzing(false);
   };
+
+  // Auto-load all analyzed files into the store when files change
+  useEffect(() => {
+    files.forEach(file => {
+      if (file.analyzed && file.ermDataType && file.ermDataType !== 'generic') {
+        loadFromAnalysis(file.ermDataType, file.data, file.columnNames);
+      }
+    });
+  }, [files, loadFromAnalysis]);
 
   const deleteFile = (fileId: string) => {
     setFiles(prev => prev.filter(f => f.id !== fileId));

@@ -582,12 +582,18 @@ function CaseStudyModal({ study, onClose }: { study: CaseStudy | null; onClose: 
 }
 
 export function Dashboard() {
+  // Access unified risk intelligence store
+  const { intelligence, isLoaded, getUnacknowledgedAlerts } = useRiskIntelligence();
+
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [currentCaseIndex, setCurrentCaseIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [toolFilter, setToolFilter] = useState('All');
   const [selectedCaseStudy, setSelectedCaseStudy] = useState<CaseStudy | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Get live alerts from the store
+  const liveAlerts = getUnacknowledgedAlerts();
 
   // Auto-scroll case studies
   useEffect(() => {
@@ -656,41 +662,135 @@ export function Dashboard() {
       {/* ==================== OVERVIEW TAB ==================== */}
       {activeTab === 'overview' && (
         <>
-          {/* Stats Row */}
+          {/* Executive Intelligence Banner - Shows when live data is loaded */}
+          {isLoaded && intelligence && (
+            <div className="mb-6 p-6 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 text-white">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h2 className="text-xl font-display font-bold flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-lumina-400" />
+                    Live Risk Intelligence
+                  </h2>
+                  <p className="text-white/70 text-sm mt-1">Data-driven insights from your uploaded risk data</p>
+                </div>
+                <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  intelligence.systemicIndicator.level === 'Critical' ? 'bg-red-500/30 text-red-300' :
+                  intelligence.systemicIndicator.level === 'Elevated' ? 'bg-amber-500/30 text-amber-300' :
+                  intelligence.systemicIndicator.level === 'Moderate' ? 'bg-yellow-500/30 text-yellow-300' :
+                  'bg-emerald-500/30 text-emerald-300'
+                }`}>
+                  Systemic Risk: {intelligence.systemicIndicator.level} ({intelligence.systemicIndicator.score}/100)
+                </div>
+              </div>
+
+              {/* Executive Insights */}
+              {intelligence.executiveInsights.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {intelligence.executiveInsights.slice(0, 3).map((insight) => (
+                    <div
+                      key={insight.id}
+                      className={`p-4 rounded-xl ${
+                        insight.severity === 'critical' ? 'bg-red-500/20 border border-red-500/30' :
+                        insight.severity === 'warning' ? 'bg-amber-500/20 border border-amber-500/30' :
+                        'bg-white/10 border border-white/20'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        {insight.severity === 'critical' && <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0" />}
+                        {insight.severity === 'warning' && <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0" />}
+                        {insight.severity === 'info' && <Activity className="w-5 h-5 text-blue-400 flex-shrink-0" />}
+                        <div>
+                          <h4 className="font-semibold text-white text-sm">{insight.title}</h4>
+                          <p className="text-white/70 text-xs mt-1 line-clamp-2">{insight.description}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Concentration Warnings */}
+              {intelligence.concentrationRisks.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-white/10">
+                  <p className="text-xs text-white/50 mb-2">CONCENTRATION WARNINGS</p>
+                  <div className="flex flex-wrap gap-2">
+                    {intelligence.concentrationRisks.map((conc, idx) => (
+                      <span key={idx} className="px-3 py-1 rounded-full text-xs bg-amber-500/20 text-amber-300">
+                        {conc.value}: {conc.percentage.toFixed(0)}% ({conc.type})
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Stats Row - Uses live data when available */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             <StatsCard
               title="Total Risks"
-              value={riskStats.total}
-              change={-8}
-              changeLabel="vs last month"
+              value={isLoaded && intelligence ? intelligence.totalRisks : riskStats.total}
+              change={isLoaded ? undefined : -8}
+              changeLabel={isLoaded ? 'from uploaded data' : 'vs last month'}
               icon={Shield}
               iconColor="violet"
             />
             <StatsCard
-              title="High Priority"
-              value={riskStats.byLevel.high + riskStats.byLevel.critical}
-              change={15}
-              changeLabel="vs last month"
+              title={isLoaded ? 'Escalated Risks' : 'High Priority'}
+              value={isLoaded && intelligence ? intelligence.escalatedRisks : riskStats.byLevel.high + riskStats.byLevel.critical}
+              change={isLoaded ? undefined : 15}
+              changeLabel={isLoaded && intelligence ? `${intelligence.highRisks} high risk` : 'vs last month'}
               icon={AlertTriangle}
               iconColor="red"
             />
             <StatsCard
-              title="KRIs in Alert"
-              value={4}
-              change={-2}
-              changeLabel="vs last week"
+              title="KRIs Breached"
+              value={isLoaded && intelligence ? intelligence.breachedKRIs : 4}
+              change={isLoaded ? undefined : -2}
+              changeLabel={isLoaded && intelligence ? `${intelligence.kriBreachRate.toFixed(0)}% breach rate` : 'vs last week'}
               icon={Gauge}
               iconColor="amber"
             />
             <StatsCard
-              title="Appetite Breaches"
-              value={1}
-              change={-50}
-              changeLabel="vs last month"
+              title="Outside Appetite"
+              value={isLoaded && intelligence ? intelligence.outsideAppetiteRisks : 1}
+              change={isLoaded ? undefined : -50}
+              changeLabel={isLoaded && intelligence ? `of ${intelligence.totalRisks} risks` : 'vs last month'}
               icon={Thermometer}
-              iconColor="emerald"
+              iconColor={isLoaded && intelligence && intelligence.outsideAppetiteRisks > 5 ? 'red' : 'emerald'}
             />
           </div>
+
+          {/* Live Alerts Banner */}
+          {liveAlerts.length > 0 && (
+            <div className="mb-6">
+              <Card padding="none" className="border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20">
+                <div className="p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
+                      <Bell className="w-4 h-4 text-red-600" />
+                    </div>
+                    <h3 className="font-semibold text-red-900 dark:text-red-300">{liveAlerts.length} Active Alert(s) Requiring Attention</h3>
+                  </div>
+                  <div className="space-y-2">
+                    {liveAlerts.slice(0, 3).map((alert) => (
+                      <div key={alert.id} className="p-3 rounded-lg bg-white dark:bg-slate-800 border border-red-100 dark:border-red-800">
+                        <div className="flex items-start gap-3">
+                          <AlertTriangle className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
+                            alert.severity === 'critical' ? 'text-red-500' : 'text-amber-500'
+                          }`} />
+                          <div>
+                            <p className="text-sm font-medium text-slate-900 dark:text-white">{alert.title}</p>
+                            <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{alert.context.implication}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </Card>
+            </div>
+          )}
 
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -706,7 +806,7 @@ export function Dashboard() {
             <div className="space-y-6">
               <AICoachWidget />
 
-              {/* Quick KRI Summary */}
+              {/* Quick KRI Summary - Uses live data when available */}
               <Card>
                 <CardHeader>
                   <CardTitle>KRI Status Summary</CardTitle>
@@ -714,29 +814,37 @@ export function Dashboard() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/30">
                     <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">Within Tolerance</span>
-                    <span className="text-lg font-bold text-emerald-700 dark:text-emerald-400">18</span>
+                    <span className="text-lg font-bold text-emerald-700 dark:text-emerald-400">
+                      {isLoaded && intelligence ? intelligence.totalKRIs - intelligence.breachedKRIs : 18}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-lg bg-amber-50 dark:bg-amber-900/30">
-                    <span className="text-sm font-medium text-amber-700 dark:text-amber-400">Approaching Threshold</span>
-                    <span className="text-lg font-bold text-amber-700 dark:text-amber-400">4</span>
+                    <span className="text-sm font-medium text-amber-700 dark:text-amber-400">Deteriorating Trend</span>
+                    <span className="text-lg font-bold text-amber-700 dark:text-amber-400">
+                      {isLoaded && intelligence ? intelligence.deterioratingKRIs : 4}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-lg bg-red-50 dark:bg-red-900/30">
                     <span className="text-sm font-medium text-red-700 dark:text-red-400">Breached</span>
-                    <span className="text-lg font-bold text-red-700 dark:text-red-400">2</span>
+                    <span className="text-lg font-bold text-red-700 dark:text-red-400">
+                      {isLoaded && intelligence ? intelligence.breachedKRIs : 2}
+                    </span>
                   </div>
                 </div>
               </Card>
 
-              {/* Risk by Category */}
+              {/* Risk by Category - Uses live data when available */}
               <Card>
                 <CardHeader>
                   <CardTitle>Risk by Category</CardTitle>
                 </CardHeader>
                 <div className="space-y-3">
-                  {Object.entries(riskStats.byCategory)
+                  {Object.entries(isLoaded && intelligence ? intelligence.byCategory : riskStats.byCategory)
                     .filter(([, count]) => count > 0)
                     .sort(([, a], [, b]) => b - a)
-                    .map(([category, count]) => (
+                    .map(([category, count]) => {
+                      const total = isLoaded && intelligence ? intelligence.totalRisks : riskStats.total;
+                      return (
                       <div key={category} className="flex items-center gap-3">
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-1">
@@ -748,12 +856,12 @@ export function Dashboard() {
                           <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                             <div
                               className="h-full bg-gradient-to-r from-lumina-500 to-lumina-600 rounded-full transition-all duration-500"
-                              style={{ width: `${(count / riskStats.total) * 100}%` }}
+                              style={{ width: `${(count / total) * 100}%` }}
                             />
                           </div>
                         </div>
                       </div>
-                    ))}
+                    )})}
                 </div>
               </Card>
             </div>

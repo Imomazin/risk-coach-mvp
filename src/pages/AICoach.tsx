@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Layout } from '../components/layout';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { useRiskIntelligence } from '../stores/RiskIntelligenceStore';
 import {
   Sparkles,
   Send,
@@ -26,6 +27,9 @@ import {
   BookOpen,
   History,
   MessageSquare,
+  Database,
+  TrendingDown,
+  Activity,
 } from 'lucide-react';
 
 interface Message {
@@ -44,16 +48,16 @@ interface RiskInsight {
 }
 
 const suggestedPrompts = [
-  'What are my top 3 risks to focus on this week?',
-  'Suggest mitigation strategies for supply chain risks',
-  'Generate a risk summary for the board meeting',
-  'Run a Monte Carlo simulation on project risks',
-  'Which risks have increased in severity this month?',
-  'Help me assess a new technology risk',
-  'What compliance gaps should I address?',
-  'Create a bow-tie analysis for cybersecurity',
-  'Compare our risk profile to industry benchmarks',
-  'Draft a risk appetite statement',
+  'What are my top risks that need immediate attention?',
+  'Give me an executive risk briefing',
+  'Which risks are deteriorating and why?',
+  'What KRIs are breaching thresholds?',
+  'What should I escalate to the board?',
+  'Run a concentration risk analysis',
+  'What controls need strengthening?',
+  'Generate a systemic risk assessment',
+  'What risks are outside appetite?',
+  'Brief me on operational risk exposure',
 ];
 
 const aiCapabilities = [
@@ -65,37 +69,6 @@ const aiCapabilities = [
   { icon: BookOpen, title: 'Best Practices', description: 'Industry standards and frameworks' },
 ];
 
-const riskInsights: RiskInsight[] = [
-  {
-    id: '1',
-    type: 'warning',
-    title: 'Cybersecurity Risk Escalating',
-    description: 'Risk score increased 20% this month. Immediate review recommended.',
-    priority: 'high',
-  },
-  {
-    id: '2',
-    type: 'action',
-    title: '3 Overdue Mitigations',
-    description: 'Supply chain and compliance actions past due date.',
-    priority: 'high',
-  },
-  {
-    id: '3',
-    type: 'trend',
-    title: 'Operational Risk Declining',
-    description: 'Process improvements showing positive impact.',
-    priority: 'low',
-  },
-  {
-    id: '4',
-    type: 'opportunity',
-    title: 'Control Optimization',
-    description: '4 redundant controls identified for consolidation.',
-    priority: 'medium',
-  },
-];
-
 const conversationHistory = [
   { id: '1', title: 'Supply Chain Risk Analysis', date: 'Today', messages: 8 },
   { id: '2', title: 'Q4 Risk Report Draft', date: 'Yesterday', messages: 12 },
@@ -103,38 +76,198 @@ const conversationHistory = [
   { id: '4', title: 'Monte Carlo Simulation', date: 'Jan 12', messages: 15 },
 ];
 
-const initialMessages: Message[] = [
-  {
-    id: '1',
-    role: 'assistant',
-    content: `Hello! I'm **Lumina R AI Risk Advisor**, your intelligent partner for risk management. I'm trained on industry best practices, regulatory frameworks, and your organization's risk data.
-
-**What I can help you with:**
-
-📊 **Risk Analysis** - Identify patterns, trends, and emerging risks
-🎯 **Mitigation Strategies** - AI-powered recommendations tailored to your context
-📈 **Quantitative Modeling** - Monte Carlo simulations, scenario analysis, VaR calculations
-📋 **Report Generation** - Board summaries, compliance reports, risk assessments
-🛡️ **Framework Guidance** - ISO 31000, COSO ERM, Basel III, and more
-🔍 **Control Assessment** - Evaluate effectiveness and identify gaps
-
-**Quick Actions:**
-• Type "analyze [risk name]" for deep analysis
-• Type "simulate" for Monte Carlo modeling
-• Type "report" for auto-generated summaries
-• Type "benchmark" to compare with industry
-
-How can I assist you today?`,
-    timestamp: new Date(),
-  },
-];
-
 export function AICoach() {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const { risks, kris, events, controls, intelligence, isLoaded } = useRiskIntelligence();
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [activeTab, setActiveTab] = useState<'chat' | 'insights' | 'history'>('chat');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Generate initial message using live data context
+  const initialMessage = useMemo((): Message => {
+    if (!isLoaded || risks.length === 0) {
+      return {
+        id: '1',
+        role: 'assistant',
+        content: `**Lumina R AI Risk Advisor**
+
+I'm your Chief Risk Officer-grade AI assistant, ready to help you navigate your organization's risk landscape.
+
+**To get started:**
+1. Upload risk data via the **Data Analysis** module
+2. Return here for intelligent, data-driven insights
+
+**What I can help with:**
+• Executive risk briefings with live data
+• Cross-pillar risk correlation analysis
+• KRI breach impact assessment
+• Board-ready risk summaries
+• Mitigation strategy recommendations
+
+Once data is loaded, I'll speak directly from your risk register—citing specific risks, KRIs, and providing actionable CRO-level guidance.
+
+**Upload your data to unlock my full capabilities.**`,
+        timestamp: new Date(),
+      };
+    }
+
+    // Generate data-aware introduction
+    const criticalRisks = risks.filter(r => r.residualScore >= 15 || r.isEscalated);
+    const outsideAppetite = risks.filter(r => r.appetiteAlignment === 'Outside Appetite');
+    const deteriorating = risks.filter(r => r.riskTrend === 'Deteriorating');
+    const kriBreaches = kris.filter(k => k.status === 'Red');
+    const systemicScore = intelligence?.systemicIndicator?.score || 0;
+
+    return {
+      id: '1',
+      role: 'assistant',
+      content: `**Lumina R AI Risk Advisor — LIVE DATA MODE**
+
+I'm connected to your risk intelligence platform and ready to provide CRO-grade guidance based on your actual data.
+
+**Current Risk Posture:**
+• **Systemic Risk Indicator:** ${systemicScore}/100 ${systemicScore >= 70 ? '🔴 Critical' : systemicScore >= 50 ? '🟠 Elevated' : '🟢 Manageable'}
+• **Total Risks Tracked:** ${risks.length}
+• **Critical/Escalated:** ${criticalRisks.length}
+• **Outside Appetite:** ${outsideAppetite.length}
+• **Deteriorating Risks:** ${deteriorating.length}
+• **KRI Breaches:** ${kriBreaches.length}
+
+${criticalRisks.length > 0 ? `**⚠️ Priority Alert:** You have ${criticalRisks.length} risk(s) requiring immediate executive attention.` : ''}
+${kriBreaches.length > 0 ? `**📊 KRI Alert:** ${kriBreaches.length} Key Risk Indicator(s) are currently in breach.` : ''}
+
+**I can help you with:**
+• "What should I escalate to the board?"
+• "Give me an executive risk briefing"
+• "Which risks are deteriorating and why?"
+• "What KRIs need immediate attention?"
+
+**Ask me anything about your risks.** I'll cite specific data points and never contradict your dashboards.`,
+      timestamp: new Date(),
+    };
+  }, [risks, kris, intelligence, isLoaded]);
+
+  // Initialize messages on mount or when data loads
+  useEffect(() => {
+    setMessages([initialMessage]);
+  }, [initialMessage]);
+
+  // Generate dynamic AI insights from live data
+  const riskInsights = useMemo((): RiskInsight[] => {
+    if (!isLoaded || risks.length === 0) {
+      return [
+        {
+          id: '1',
+          type: 'action',
+          title: 'No Data Loaded',
+          description: 'Upload risk data via Data Analysis to enable AI insights.',
+          priority: 'high',
+        },
+      ];
+    }
+
+    const insights: RiskInsight[] = [];
+
+    // Check for critical risks
+    const criticalRisks = risks.filter(r => r.residualScore >= 15);
+    if (criticalRisks.length > 0) {
+      insights.push({
+        id: 'critical',
+        type: 'warning',
+        title: `${criticalRisks.length} Critical Risk${criticalRisks.length > 1 ? 's' : ''} Active`,
+        description: `${criticalRisks[0].description.substring(0, 60)}...`,
+        priority: 'high',
+      });
+    }
+
+    // Check for escalated risks
+    const escalated = risks.filter(r => r.isEscalated);
+    if (escalated.length > 0) {
+      insights.push({
+        id: 'escalated',
+        type: 'action',
+        title: `${escalated.length} Risk${escalated.length > 1 ? 's' : ''} Require Escalation`,
+        description: `Including: ${escalated[0].category} risk`,
+        priority: 'high',
+      });
+    }
+
+    // Check for deteriorating trends
+    const deteriorating = risks.filter(r => r.riskTrend === 'Deteriorating');
+    if (deteriorating.length > 0) {
+      insights.push({
+        id: 'deteriorating',
+        type: 'trend',
+        title: `${deteriorating.length} Risk${deteriorating.length > 1 ? 's' : ''} Deteriorating`,
+        description: 'Negative trend detected. Review mitigation effectiveness.',
+        priority: 'high',
+      });
+    }
+
+    // Check for KRI breaches
+    const kriBreaches = kris.filter(k => k.status === 'Red');
+    if (kriBreaches.length > 0) {
+      insights.push({
+        id: 'kri-breach',
+        type: 'warning',
+        title: `${kriBreaches.length} KRI Breach${kriBreaches.length > 1 ? 'es' : ''}`,
+        description: kriBreaches[0].indicator,
+        priority: 'high',
+      });
+    }
+
+    // Check for concentration risk
+    const highConcentration = intelligence?.concentrationRisks?.filter(c => c.isConcentrated) || [];
+    if (highConcentration.length > 0) {
+      insights.push({
+        id: 'concentration',
+        type: 'warning',
+        title: 'Concentration Risk Detected',
+        description: `${highConcentration[0].value}: ${highConcentration[0].percentage.toFixed(0)}% of risks`,
+        priority: 'medium',
+      });
+    }
+
+    // Check for weak controls
+    const weakControls = controls.filter(c => c.effectiveness === 'Low');
+    if (weakControls.length > 0) {
+      insights.push({
+        id: 'controls',
+        type: 'opportunity',
+        title: `${weakControls.length} Control${weakControls.length > 1 ? 's' : ''} Need Strengthening`,
+        description: 'Low effectiveness controls identified for improvement.',
+        priority: 'medium',
+      });
+    }
+
+    // Add improvement opportunity if risks are improving
+    const improving = risks.filter(r => r.riskTrend === 'Improving');
+    if (improving.length > 0) {
+      insights.push({
+        id: 'improving',
+        type: 'opportunity',
+        title: `${improving.length} Risk${improving.length > 1 ? 's' : ''} Improving`,
+        description: 'Mitigation efforts showing positive results.',
+        priority: 'low',
+      });
+    }
+
+    return insights.slice(0, 4); // Return top 4 insights
+  }, [risks, kris, controls, intelligence, isLoaded]);
+
+  // Calculate live stats
+  const liveStats = useMemo(() => {
+    if (!isLoaded || risks.length === 0) {
+      return { highPriority: 0, overdueActions: 0, resolvedThisWeek: 0 };
+    }
+
+    const highPriority = risks.filter(r => r.residualScore >= 15 || r.isEscalated).length;
+    const overdueActions = risks.filter(r => r.status === 'Open' && r.appetiteAlignment === 'Outside Appetite').length;
+    const resolvedThisWeek = risks.filter(r => r.status === 'Closed' && r.riskTrend === 'Improving').length;
+
+    return { highPriority, overdueActions, resolvedThisWeek };
+  }, [risks, isLoaded]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -143,6 +276,349 @@ export function AICoach() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Generate CRO-grade response using live data
+  const generateLiveResponse = (userInput: string): string => {
+    const lowerInput = userInput.toLowerCase();
+
+    // No data loaded
+    if (!isLoaded || risks.length === 0) {
+      return `**Data Required**
+
+I don't have access to your risk data yet. To provide CRO-grade insights:
+
+1. Go to **Data Analysis** in the sidebar
+2. Upload your risk register, KRI data, or loss events
+3. Return here for data-driven guidance
+
+Without live data, I can only offer generic risk management advice. With your data, I'll cite specific risks, trends, and provide actionable recommendations.`;
+    }
+
+    const criticalRisks = risks.filter(r => r.residualScore >= 15 || r.isEscalated);
+    const outsideAppetite = risks.filter(r => r.appetiteAlignment === 'Outside Appetite');
+    const deteriorating = risks.filter(r => r.riskTrend === 'Deteriorating');
+    const kriBreaches = kris.filter(k => k.status === 'Red');
+    const weakControls = controls.filter(c => c.effectiveness === 'Low');
+    const systemicScore = intelligence?.systemicIndicator?.score || 0;
+    const categories = [...new Set(risks.map(r => r.category))];
+
+    // Executive briefing
+    if (lowerInput.includes('executive') || lowerInput.includes('briefing') || lowerInput.includes('summary') || lowerInput.includes('overview')) {
+      const categoryBreakdown = categories.map(cat => {
+        const catRisks = risks.filter(r => r.category === cat);
+        const critical = catRisks.filter(r => r.residualScore >= 15).length;
+        return `• **${cat}:** ${catRisks.length} risks (${critical} critical)`;
+      }).join('\n');
+
+      return `## Executive Risk Briefing
+**As of ${new Date().toLocaleDateString()}**
+
+### Overall Risk Posture
+**Systemic Risk Indicator: ${systemicScore}/100** ${systemicScore >= 70 ? '— ELEVATED CONCERN' : systemicScore >= 50 ? '— REQUIRES ATTENTION' : '— MANAGEABLE'}
+
+### Portfolio Summary
+• **Total Risks:** ${risks.length}
+• **Critical/Escalated:** ${criticalRisks.length}
+• **Outside Risk Appetite:** ${outsideAppetite.length}
+• **Deteriorating Trends:** ${deteriorating.length}
+• **KRI Breaches:** ${kriBreaches.length}
+
+### Risk Distribution by Category
+${categoryBreakdown}
+
+### Board-Level Concerns
+${criticalRisks.length > 0 ? `🔴 **${criticalRisks.length} risk(s) require board visibility** — these have residual scores ≥15 or have been flagged for escalation.` : '✅ No immediate board-level escalations required.'}
+
+${deteriorating.length > 0 ? `⚠️ **${deteriorating.length} risk(s) showing deteriorating trends** — mitigation effectiveness should be reviewed.` : ''}
+
+${kriBreaches.length > 0 ? `📊 **${kriBreaches.length} KRI(s) in breach status** — early warning indicators triggered.` : ''}
+
+### CRO Recommendation
+${systemicScore >= 70 ? 'Recommend an emergency risk committee meeting within 48 hours to address systemic concerns.' : systemicScore >= 50 ? 'Schedule a risk review within the next week to address emerging concerns.' : 'Current posture is manageable. Continue regular monitoring cadence.'}
+
+*This briefing was generated from live platform data. All figures are current as of this moment.*`;
+    }
+
+    // Top risks / immediate attention
+    if (lowerInput.includes('top') || lowerInput.includes('priority') || lowerInput.includes('immediate') || lowerInput.includes('urgent') || lowerInput.includes('focus')) {
+      if (criticalRisks.length === 0) {
+        return `**Good News: No Critical Risks Currently Active**
+
+Based on your risk register, all risks are within acceptable thresholds. However, I recommend monitoring:
+
+${deteriorating.length > 0 ? `• ${deteriorating.length} risks showing deteriorating trends` : ''}
+${kriBreaches.length > 0 ? `• ${kriBreaches.length} KRI breaches that could escalate` : ''}
+${outsideAppetite.length > 0 ? `• ${outsideAppetite.length} risks outside appetite boundaries` : ''}
+
+Continue proactive monitoring and maintain current controls.`;
+      }
+
+      const topRisksDetail = criticalRisks.slice(0, 5).map((r, i) => {
+        return `### ${i + 1}. ${r.category} — ${r.description.substring(0, 50)}...
+• **Residual Score:** ${r.residualScore}/25 ${r.residualScore >= 20 ? '🔴' : r.residualScore >= 15 ? '🟠' : '🟡'}
+• **Trend:** ${r.riskTrend === 'Deteriorating' ? '↗️ Deteriorating' : r.riskTrend === 'Improving' ? '↘️ Improving' : '→ Stable'}
+• **Appetite Status:** ${r.appetiteAlignment}
+• **Owner:** ${r.owner}
+• **Escalation Reasons:** ${r.escalationReasons.length > 0 ? r.escalationReasons.join(', ') : 'Score threshold'}`;
+      }).join('\n\n');
+
+      return `## Top Priority Risks Requiring Immediate Attention
+
+**${criticalRisks.length} Critical Risk(s) Identified**
+
+${topRisksDetail}
+
+### Recommended Actions
+1. Schedule immediate review meetings with risk owners
+2. Validate control effectiveness for each critical risk
+3. Prepare board escalation memo for risks with score ≥20
+4. Review linked KRIs for early warning signs
+
+*Based on live data from your risk register.*`;
+    }
+
+    // Board escalation
+    if (lowerInput.includes('board') || lowerInput.includes('escalat')) {
+      const escalatedRisks = risks.filter(r => r.isEscalated || r.residualScore >= 20);
+
+      if (escalatedRisks.length === 0) {
+        return `**No Immediate Board Escalations Required**
+
+Current risk posture does not warrant emergency board communication. However, the following should be included in your regular board risk report:
+
+• Overall systemic risk indicator: ${systemicScore}/100
+• Risks outside appetite: ${outsideAppetite.length}
+• KRI breaches: ${kriBreaches.length}
+• Deteriorating trends: ${deteriorating.length}
+
+Schedule these items for the next regular board meeting.`;
+      }
+
+      const boardItems = escalatedRisks.slice(0, 3).map((r, i) => {
+        return `**${i + 1}. ${r.category}: ${r.description.substring(0, 60)}...**
+   - Residual Score: ${r.residualScore}/25
+   - Escalation Triggers: ${r.escalationReasons.join(', ') || 'High score threshold'}
+   - Velocity: ${r.velocity}
+   - Recommended Board Action: ${r.residualScore >= 20 ? 'Approve emergency mitigation budget' : 'Review and acknowledge'}`;
+      }).join('\n\n');
+
+      return `## Board Escalation Memo
+
+**${escalatedRisks.length} Risk(s) Require Board Attention**
+
+${boardItems}
+
+### Supporting Data
+• Systemic Risk Indicator: ${systemicScore}/100
+• KRI Breaches Supporting Escalation: ${kriBreaches.length}
+• Total Risks Outside Appetite: ${outsideAppetite.length}
+
+### Recommended Board Actions
+1. Acknowledge awareness of escalated risks
+2. Approve additional mitigation resources if requested
+3. Set expectations for follow-up reporting timeline
+4. Consider risk committee deep-dive session
+
+*This escalation memo is generated from live platform data and reflects current risk posture.*`;
+    }
+
+    // Deteriorating risks
+    if (lowerInput.includes('deteriorat') || lowerInput.includes('wors') || lowerInput.includes('getting worse') || lowerInput.includes('increas')) {
+      if (deteriorating.length === 0) {
+        return `**No Deteriorating Risk Trends Detected**
+
+All tracked risks are either stable or improving. This indicates:
+• Effective mitigation strategies in place
+• Controls performing as expected
+• No emerging threats requiring immediate attention
+
+Continue monitoring KRIs for early warning signs of trend changes.`;
+      }
+
+      const detailedList = deteriorating.slice(0, 5).map((r, i) => {
+        return `### ${i + 1}. ${r.category} Risk
+**${r.description.substring(0, 80)}...**
+• Current Score: ${r.residualScore}/25
+• Control Effectiveness: ${r.controlEffectiveness}
+• Velocity: ${r.velocity}
+• Owner: ${r.owner}
+• **Why Deteriorating:** ${r.controlEffectiveness === 'Low' ? 'Weak control effectiveness' : r.velocity === 'Fast' ? 'Fast-moving risk, controls not keeping pace' : 'External factors or control gaps'}`;
+      }).join('\n\n');
+
+      return `## Deteriorating Risk Analysis
+
+**${deteriorating.length} Risk(s) Showing Negative Trends**
+
+${detailedList}
+
+### Root Cause Analysis
+${weakControls.length > 0 ? `• **${weakControls.length} controls rated as low effectiveness** — primary driver of deterioration` : ''}
+${risks.filter(r => r.velocity === 'Fast').length > 0 ? `• **${risks.filter(r => r.velocity === 'Fast').length} fast-velocity risks** — outpacing control response` : ''}
+${outsideAppetite.length > 0 ? `• **${outsideAppetite.length} risks outside appetite** — tolerance boundaries breached` : ''}
+
+### CRO Recommendations
+1. Immediate control effectiveness review for deteriorating risks
+2. Consider accelerating mitigation timelines
+3. Increase monitoring frequency for at-risk categories
+4. Evaluate additional resource allocation
+
+*Analysis based on trend data in your risk register.*`;
+    }
+
+    // KRI analysis
+    if (lowerInput.includes('kri') || lowerInput.includes('indicator') || lowerInput.includes('metric') || lowerInput.includes('threshold')) {
+      if (kris.length === 0) {
+        return `**No KRI Data Available**
+
+I don't have Key Risk Indicator data loaded. To enable KRI analysis:
+1. Upload KRI data via Data Analysis
+2. Ensure columns include: indicator name, current value, threshold, status
+
+With KRI data, I can provide early warning analysis and breach impact assessment.`;
+      }
+
+      const breached = kris.filter(k => k.status === 'Red');
+      const approaching = kris.filter(k => k.status === 'Amber');
+      const normal = kris.filter(k => k.status === 'Green');
+
+      const breachDetails = breached.slice(0, 5).map((k, i) => {
+        return `**${i + 1}. ${k.indicator}**
+   - Current Value: ${k.currentValue}
+   - Threshold: ${k.threshold}
+   - Breach %: ${k.breachPercentage.toFixed(0)}%
+   - Trend: ${k.trend}
+   - Related Risk ID: ${k.riskId}`;
+      }).join('\n\n');
+
+      return `## KRI Status Report
+
+### Summary
+• **Total KRIs Tracked:** ${kris.length}
+• 🔴 **Breached (Red):** ${breached.length}
+• 🟠 **Warning (Amber):** ${approaching.length}
+• 🟢 **Normal (Green):** ${normal.length}
+
+${breached.length > 0 ? `### KRI Breaches Requiring Attention\n\n${breachDetails}` : '### ✅ No KRI Breaches'}
+
+${approaching.length > 0 ? `\n### ⚠️ KRIs Approaching Threshold\n${approaching.map(k => `• ${k.indicator}: ${k.currentValue} (threshold: ${k.threshold})`).join('\n')}` : ''}
+
+### Recommended Actions
+${breached.length > 0 ? '1. Investigate root cause of each KRI breach\n2. Assess impact on linked risks\n3. Escalate if breach persists >24 hours' : '1. Continue regular monitoring\n2. Review thresholds for relevance'}
+
+*KRI data reflects current uploaded indicators.*`;
+    }
+
+    // Concentration risk
+    if (lowerInput.includes('concentration') || lowerInput.includes('concentrated') || lowerInput.includes('diversif')) {
+      const categoryConcentration = categories.map(cat => {
+        const count = risks.filter(r => r.category === cat).length;
+        const percentage = Math.round((count / risks.length) * 100);
+        return { category: cat, count, percentage };
+      }).sort((a, b) => b.percentage - a.percentage);
+
+      const concentrationRisks = intelligence?.concentrationRisks?.filter(c => c.isConcentrated) || [];
+
+      return `## Concentration Risk Analysis
+
+### Risk Distribution by Category
+${categoryConcentration.map(c => `• **${c.category}:** ${c.count} risks (${c.percentage}%) ${c.percentage > 40 ? '⚠️ HIGH CONCENTRATION' : ''}`).join('\n')}
+
+${concentrationRisks.length > 0 ? `### ⚠️ Concentration Warnings\n${concentrationRisks.map((c) => `• ${c.type}: ${c.value} — ${c.percentage.toFixed(0)}% (${c.count} risks)`).join('\n')}` : '### ✅ No Concentration Concerns'}
+
+### Regional Distribution
+${(() => {
+  const regions = [...new Set(risks.map(r => r.region))];
+  return regions.map(region => {
+    const count = risks.filter(r => r.region === region).length;
+    const pct = Math.round((count / risks.length) * 100);
+    return `• **${region}:** ${count} risks (${pct}%)`;
+  }).join('\n');
+})()}
+
+### CRO Perspective
+${categoryConcentration[0]?.percentage > 40 ?
+  `Your portfolio shows concentration in ${categoryConcentration[0].category} (${categoryConcentration[0].percentage}%). Consider diversifying risk mitigation investments across categories.` :
+  'Risk distribution appears balanced across categories. Continue monitoring for emerging concentration patterns.'}
+
+*Concentration analysis based on current risk register data.*`;
+    }
+
+    // Controls analysis
+    if (lowerInput.includes('control') || lowerInput.includes('mitigat') || lowerInput.includes('treatment')) {
+      if (controls.length === 0) {
+        const riskControls = risks.filter(r => r.controlEffectiveness);
+        const lowEff = riskControls.filter(r => r.controlEffectiveness === 'Low').length;
+        const medEff = riskControls.filter(r => r.controlEffectiveness === 'Medium').length;
+        const highEff = riskControls.filter(r => r.controlEffectiveness === 'High').length;
+
+        return `## Control Effectiveness Analysis (From Risk Register)
+
+### Effectiveness Distribution
+• 🔴 **Low Effectiveness:** ${lowEff} risks
+• 🟠 **Medium Effectiveness:** ${medEff} risks
+• 🟢 **High Effectiveness:** ${highEff} risks
+
+### Risks with Weak Controls
+${risks.filter(r => r.controlEffectiveness === 'Low').slice(0, 3).map(r => `• ${r.category}: ${r.description.substring(0, 50)}...`).join('\n') || 'None identified'}
+
+### Recommendations
+${lowEff > 0 ? `1. Prioritize control strengthening for ${lowEff} low-effectiveness areas\n2. Review control design vs. operating effectiveness\n3. Consider automated controls where applicable` : 'Current control effectiveness is acceptable. Maintain regular testing cadence.'}
+
+*For detailed control analysis, upload dedicated control assessment data.*`;
+      }
+
+      const lowControls = controls.filter(c => c.effectiveness === 'Low');
+      const medControls = controls.filter(c => c.effectiveness === 'Medium');
+      const highControls = controls.filter(c => c.effectiveness === 'High');
+
+      return `## Control Assessment Summary
+
+### Control Effectiveness Distribution
+• 🔴 **Low:** ${lowControls.length} controls
+• 🟠 **Medium:** ${medControls.length} controls
+• 🟢 **High:** ${highControls.length} controls
+
+${lowControls.length > 0 ? `### Controls Requiring Attention\n${lowControls.slice(0, 5).map(c => `• **${c.name}** (${c.type})\n  - Effectiveness: Low\n  - Mapped to ${c.mappedRiskIds.length} risk(s)`).join('\n\n')}` : ''}
+
+### Recommendations
+1. Conduct root cause analysis on low-effectiveness controls
+2. Evaluate control automation opportunities
+3. Ensure adequate testing frequency
+4. Consider compensating controls where primary controls are weak
+
+*Control data reflects uploaded assessment information.*`;
+    }
+
+    // Default intelligent response
+    return `## Risk Intelligence Response
+
+Based on your current risk data:
+
+### Current Posture
+• **Systemic Risk Indicator:** ${systemicScore}/100
+• **Total Active Risks:** ${risks.length}
+• **Critical Risks:** ${criticalRisks.length}
+• **KRI Breaches:** ${kriBreaches.length}
+
+### Key Observations
+${criticalRisks.length > 0 ? `• ${criticalRisks.length} critical risk(s) require immediate attention` : '• No critical risks currently active'}
+${deteriorating.length > 0 ? `• ${deteriorating.length} risk(s) showing deteriorating trends` : ''}
+${outsideAppetite.length > 0 ? `• ${outsideAppetite.length} risk(s) operating outside appetite` : ''}
+${intelligence?.concentrationRisks?.some(c => c.isConcentrated) ? `• Concentration concerns detected` : ''}
+
+### How I Can Help
+Try asking me:
+• "What are my top priority risks?"
+• "Give me an executive briefing"
+• "What should I escalate to the board?"
+• "Which risks are deteriorating?"
+• "Run a KRI analysis"
+• "Analyze concentration risk"
+
+I'll provide data-driven insights using your actual risk register.
+
+*All responses cite your live platform data and never contradict your dashboards.*`;
+  };
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -155,223 +631,13 @@ export function AICoach() {
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    const userInput = input;
     setInput('');
     setIsTyping(true);
 
-    // Simulate AI response with more intelligent responses
+    // Generate response using live data
     setTimeout(() => {
-      const responses: Record<string, string> = {
-        default: `Based on my analysis of your risk register and current data:
-
-**Key Findings:**
-1. You have **3 high-priority risks** requiring immediate attention
-2. The "Cybersecurity Breach" risk has the highest score (15/25)
-3. **2 mitigation actions** are overdue and need escalation
-
-**AI Recommendations:**
-• 🔴 **Urgent:** Schedule a review meeting for cybersecurity risk with IT security team
-• 🟠 **This Week:** Update supply chain risk assessment with latest vendor data
-• 🟡 **This Month:** Escalate compliance gap to senior management
-
-**Predictive Insight:**
-Based on trend analysis, I predict a 35% likelihood of the cybersecurity risk materializing in the next 90 days without additional controls.
-
-Would you like me to:
-1. Generate a detailed risk report?
-2. Create a mitigation action plan?
-3. Run a Monte Carlo simulation on potential impact?`,
-
-        risks: `## Top Priority Risks This Week
-
-Based on comprehensive analysis of your risk register, KRIs, and industry trends:
-
-### 1. 🔴 Cybersecurity Breach (Score: 15 - Critical)
-- **Status:** Actively mitigating
-- **Trend:** ↑ Increasing (up 20% this month)
-- **KRI Alert:** Patch compliance at 94% (threshold: 95%)
-- **Action:** Review penetration test results by Friday
-- **AI Confidence:** 92%
-
-### 2. 🟠 Supply Chain Disruption (Score: 12 - High)
-- **Status:** Under assessment
-- **Trend:** → Stable
-- **KRI Alert:** Supplier concentration at 25%
-- **Action:** Contact backup suppliers for critical components
-- **AI Confidence:** 87%
-
-### 3. 🟡 Regulatory Compliance Gap (Score: 10 - Medium-High)
-- **Status:** Pending review
-- **Trend:** ↑ Increasing
-- **KRI Alert:** Training completion at 88% (threshold: 95%)
-- **Action:** Complete compliance training rollout
-- **AI Confidence:** 85%
-
-**Want me to:**
-• Draft detailed mitigation plans for each?
-• Generate a risk briefing for leadership?
-• Run scenario analysis on combined impact?`,
-
-        mitigation: `## AI-Powered Mitigation Strategies for Supply Chain Risk
-
-I've analyzed your supply chain data, vendor information, and industry best practices to recommend:
-
-### Immediate Actions (Week 1-2)
-| Action | Owner | Priority | Cost Est. |
-|--------|-------|----------|-----------|
-| Identify backup suppliers | Procurement | Critical | $5K |
-| Increase safety stock 20% | Operations | High | $50K |
-| Establish supplier hotline | Vendor Mgmt | High | $2K |
-
-### Short-Term (Month 1-3)
-✅ Implement real-time supplier monitoring dashboard
-✅ Negotiate flexible contract terms with key vendors
-✅ Develop regional sourcing alternatives
-✅ Create supplier risk scoring model
-
-### Long-Term (3-12 months)
-📊 Diversify supplier base across 3+ geographic regions
-📊 Invest in supply chain visibility technology
-📊 Build strategic inventory reserves (30-day buffer)
-📊 Establish supplier development program
-
-**Estimated Risk Reduction:** 45-60%
-**ROI Timeline:** 6-8 months
-**AI Confidence Level:** 89%
-
-Would you like me to generate a detailed implementation plan with timelines?`,
-
-        simulate: `## Monte Carlo Simulation Results
-
-I've run **10,000 iterations** on your risk portfolio using your current risk data:
-
-### Financial Impact Distribution
-\`\`\`
-P5  (Best Case):     $1.2M
-P25 (Optimistic):    $1.8M
-P50 (Most Likely):   $2.5M  ← Expected Value
-P75 (Conservative):  $3.4M
-P95 (Worst Case):    $5.1M
-\`\`\`
-
-### Key Findings
-📈 **Value at Risk (95%):** $5.1M
-📊 **Expected Loss:** $2.5M
-📉 **Standard Deviation:** $1.2M
-⚠️ **Tail Risk:** 12% chance of losses > $4M
-
-### Risk Contribution Analysis
-| Risk | Contribution |
-|------|-------------|
-| Cybersecurity | 35% |
-| Supply Chain | 28% |
-| Compliance | 18% |
-| Market Risk | 12% |
-| Other | 7% |
-
-### Recommendation
-Based on this simulation, I recommend:
-1. **Increase cyber insurance coverage** to $5M minimum
-2. **Allocate $4.5M risk reserves** (P90 coverage)
-3. **Prioritize cybersecurity controls** (highest contributor)
-
-Want me to run sensitivity analysis or stress scenarios?`,
-
-        benchmark: `## Industry Benchmark Comparison
-
-I've compared your risk profile against **247 organizations** in your industry:
-
-### Overall Risk Maturity Score
-**Your Score: 3.4/5** (Above Average)
-Industry Average: 3.1/5
-
-### Category Comparison
-| Category | You | Industry | Status |
-|----------|-----|----------|--------|
-| Risk Governance | 4.2 | 3.5 | ✅ Above |
-| Risk Assessment | 3.8 | 3.4 | ✅ Above |
-| Risk Response | 3.0 | 3.2 | ⚠️ Below |
-| Monitoring | 3.2 | 2.8 | ✅ Above |
-| Technology | 2.8 | 3.1 | ❌ Below |
-
-### Strengths (Top Quartile)
-✅ Risk governance framework
-✅ KRI monitoring coverage
-✅ Board reporting frequency
-
-### Improvement Areas
-⚠️ Risk response time (you: 14 days, best: 7 days)
-⚠️ Technology/GRC tool maturity
-⚠️ Quantitative risk analysis adoption
-
-### Recommendations
-1. Invest in GRC technology platform
-2. Implement automated risk response workflows
-3. Expand quantitative risk modeling capabilities
-
-Would you like a detailed gap analysis report?`,
-
-        report: `## Auto-Generated Risk Report
-
-I've compiled a comprehensive risk summary based on your current data:
-
----
-
-### Executive Summary
-**Period:** January 2026
-**Overall Risk Level:** MODERATE-HIGH
-**Trend:** Stable with emerging concerns
-
-### Risk Dashboard
-- **Total Risks:** 24 active
-- **Critical/High:** 5 (21%)
-- **Medium:** 12 (50%)
-- **Low:** 7 (29%)
-
-### Key Highlights
-
-**🔴 Escalations Required**
-1. Cybersecurity breach risk requires board attention
-2. Two mitigation actions are overdue
-
-**🟢 Positive Developments**
-1. Operational risk reduced 15% through process improvements
-2. Three risks successfully mitigated and closed
-
-**📊 KRI Summary**
-- 18 KRIs within tolerance
-- 4 approaching threshold
-- 2 in breach status
-
-### Upcoming Milestones
-- Q4 Risk Review: Dec 20
-- Compliance Audit: Jan 15
-- Board Presentation: Feb 10
-
----
-
-**Report generated by Lumina R AI**
-*Confidence Level: 94%*
-
-Would you like me to:
-1. Export this as PDF?
-2. Add more detail to any section?
-3. Generate board presentation slides?`,
-      };
-
-      const lowerInput = input.toLowerCase();
-      let responseContent = responses.default;
-
-      if (lowerInput.includes('top') || lowerInput.includes('priority') || lowerInput.includes('focus')) {
-        responseContent = responses.risks;
-      } else if (lowerInput.includes('mitigation') || lowerInput.includes('supply chain') || lowerInput.includes('strategy')) {
-        responseContent = responses.mitigation;
-      } else if (lowerInput.includes('simulate') || lowerInput.includes('monte carlo') || lowerInput.includes('model')) {
-        responseContent = responses.simulate;
-      } else if (lowerInput.includes('benchmark') || lowerInput.includes('compare') || lowerInput.includes('industry')) {
-        responseContent = responses.benchmark;
-      } else if (lowerInput.includes('report') || lowerInput.includes('summary') || lowerInput.includes('board')) {
-        responseContent = responses.report;
-      }
+      const responseContent = generateLiveResponse(userInput);
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -382,7 +648,7 @@ Would you like me to:
 
       setMessages((prev) => [...prev, assistantMessage]);
       setIsTyping(false);
-    }, 2000);
+    }, 1500);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -403,7 +669,21 @@ Would you like me to:
   };
 
   return (
-    <Layout title="AI Risk Advisor" subtitle="Intelligent guidance powered by Lumina Intelligence">
+    <Layout title="AI Risk Advisor" subtitle="CRO-grade intelligence powered by live platform data">
+      {/* Live Data Status Bar */}
+      {isLoaded && risks.length > 0 && (
+        <div className="mb-4 flex items-center gap-3 px-4 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+          <Database className="w-4 h-4 text-emerald-500" />
+          <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+            Connected to Live Data: {risks.length} risks, {kris.length} KRIs, {events.length} events tracked
+          </span>
+          <div className="ml-auto flex items-center gap-2">
+            <Activity className="w-3 h-3 text-emerald-500 animate-pulse" />
+            <span className="text-xs text-emerald-600 dark:text-emerald-500">Real-time</span>
+          </div>
+        </div>
+      )}
+
       {/* AI Capabilities Bar */}
       <div className="mb-6 overflow-x-auto">
         <div className="flex gap-4 min-w-max pb-2">
@@ -508,7 +788,7 @@ Would you like me to:
                       <span className="w-2.5 h-2.5 bg-lumina-400 rounded-full animate-bounce [animation-delay:0.1s]" />
                       <span className="w-2.5 h-2.5 bg-lumina-400 rounded-full animate-bounce [animation-delay:0.2s]" />
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">AI is analyzing your request...</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Analyzing your risk data...</p>
                   </div>
                 </div>
               )}
@@ -524,7 +804,10 @@ Would you like me to:
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder="Ask anything about your risks... (try 'simulate', 'benchmark', or 'report')"
+                    placeholder={isLoaded && risks.length > 0
+                      ? "Ask about your risks... (try 'executive briefing' or 'top risks')"
+                      : "Upload risk data to enable live insights..."
+                    }
                     rows={1}
                     className="w-full px-4 py-3 pr-24 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800
                              text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 resize-none
@@ -544,7 +827,7 @@ Would you like me to:
                 </Button>
               </div>
               <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2 text-center">
-                Lumina R AI Risk Advisor • Responses are AI-generated suggestions. Always verify with your risk policies.
+                Lumina R AI Risk Advisor • {isLoaded && risks.length > 0 ? 'Responses cite live platform data' : 'Upload data to enable live insights'}
               </p>
             </div>
           </Card>
@@ -602,7 +885,7 @@ Would you like me to:
             <Card>
               <h3 className="font-medium text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                 <Brain className="w-4 h-4 text-lumina-500" />
-                AI Insights
+                {isLoaded && risks.length > 0 ? 'Live AI Insights' : 'AI Insights'}
               </h3>
               <div className="space-y-3">
                 {riskInsights.map((insight) => (
@@ -652,31 +935,57 @@ Would you like me to:
             </Card>
           )}
 
-          {/* Quick Stats */}
+          {/* Quick Stats - Now using live data */}
           <Card>
-            <h3 className="font-medium text-slate-900 dark:text-white mb-3">Risk Snapshot</h3>
+            <h3 className="font-medium text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+              {isLoaded && risks.length > 0 && <Activity className="w-3 h-3 text-emerald-500" />}
+              Risk Snapshot
+              {isLoaded && risks.length > 0 && <span className="text-xs text-emerald-500 ml-auto">LIVE</span>}
+            </h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-red-500" />
                   High Priority
                 </span>
-                <span className="text-sm font-bold text-red-600">3</span>
+                <span className="text-sm font-bold text-red-600">{liveStats.highPriority}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2">
                   <Clock className="w-4 h-4 text-amber-500" />
-                  Overdue Actions
+                  Outside Appetite
                 </span>
-                <span className="text-sm font-bold text-amber-600">2</span>
+                <span className="text-sm font-bold text-amber-600">{liveStats.overdueActions}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  Resolved This Week
+                  Improving Trend
                 </span>
-                <span className="text-sm font-bold text-emerald-600">5</span>
+                <span className="text-sm font-bold text-emerald-600">{liveStats.resolvedThisWeek}</span>
               </div>
+              {isLoaded && risks.length > 0 && intelligence && (
+                <div className="pt-2 mt-2 border-t border-slate-100 dark:border-slate-700">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                      {intelligence.systemicIndicator.score >= 70 ? (
+                        <TrendingUp className="w-4 h-4 text-red-500" />
+                      ) : intelligence.systemicIndicator.score >= 50 ? (
+                        <TrendingUp className="w-4 h-4 text-amber-500" />
+                      ) : (
+                        <TrendingDown className="w-4 h-4 text-emerald-500" />
+                      )}
+                      Systemic Risk
+                    </span>
+                    <span className={`text-sm font-bold ${
+                      intelligence.systemicIndicator.score >= 70 ? 'text-red-600' :
+                      intelligence.systemicIndicator.score >= 50 ? 'text-amber-600' : 'text-emerald-600'
+                    }`}>
+                      {intelligence.systemicIndicator.score}/100
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </Card>
 
@@ -684,7 +993,7 @@ Would you like me to:
           <Button
             variant="secondary"
             className="w-full"
-            onClick={() => setMessages(initialMessages)}
+            onClick={() => setMessages([initialMessage])}
           >
             <RefreshCw className="w-4 h-4" />
             New Conversation

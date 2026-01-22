@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
+import * as XLSX from 'xlsx';
 import { Layout } from '../components/layout/Layout';
 import { ERMAnalysisPanel } from '../components/analysis/ERMAnalysisPanel';
 import { analyzeERMData, detectDataType } from '../utils/riskDataAnalyzer';
@@ -213,18 +214,71 @@ export function DataAnalysis() {
   }, []);
 
   const processFile = useCallback(async (file: File) => {
-    const reader = new FileReader();
+    let fileType: 'csv' | 'excel' | 'json' = 'csv';
 
+    if (file.name.endsWith('.json')) {
+      fileType = 'json';
+    } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+      fileType = 'excel';
+    }
+
+    // Handle Excel files with ArrayBuffer
+    if (fileType === 'excel') {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target?.result as ArrayBuffer);
+          const workbook = XLSX.read(data, { type: 'array' });
+
+          // Process all sheets and combine them
+          const allSheetData: { sheetName: string; data: Record<string, unknown>[]; columns: string[] }[] = [];
+
+          workbook.SheetNames.forEach((sheetName) => {
+            const worksheet = workbook.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, { defval: '' });
+
+            if (jsonData.length > 0) {
+              const columns = Object.keys(jsonData[0]);
+              allSheetData.push({ sheetName, data: jsonData, columns });
+            }
+          });
+
+          // Create a file for each sheet with data
+          allSheetData.forEach((sheet, index) => {
+            const columns = sheet.columns.map(name => analyzeColumn(sheet.data, name));
+            const ermDataType = detectDataType(sheet.columns);
+
+            const uploadedFile: UploadedFile = {
+              id: `${Date.now()}-${index}`,
+              name: allSheetData.length > 1 ? `${file.name} - ${sheet.sheetName}` : file.name,
+              size: file.size,
+              type: fileType,
+              uploadedAt: new Date(),
+              rows: sheet.data.length,
+              columns,
+              columnNames: sheet.columns,
+              data: sheet.data,
+              analyzed: false,
+              ermDataType,
+            };
+
+            setFiles(prev => [...prev, uploadedFile]);
+            if (index === 0) {
+              setSelectedFile(uploadedFile);
+            }
+          });
+        } catch (error) {
+          console.error('Error parsing Excel file:', error);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+      return;
+    }
+
+    // Handle CSV and JSON files with text
+    const reader = new FileReader();
     reader.onload = (e) => {
       const content = e.target?.result as string;
-      let fileType: 'csv' | 'excel' | 'json' = 'csv';
-
-      if (file.name.endsWith('.json')) {
-        fileType = 'json';
-      } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
-        fileType = 'excel';
-      }
-
       let parsedData: Record<string, unknown>[] = [];
       let columnNames: string[] = [];
 

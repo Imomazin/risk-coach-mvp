@@ -33,6 +33,7 @@ interface NavItem {
 const mainNavItems: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/' },
   { id: 'risks', label: 'Risk Register', icon: Shield, path: '/risks', badge: 8 },
+  { id: 'risk-indicators', label: 'Risk Indicators', icon: TrendingUp, path: '/risk-indicators' },
   { id: 'frameworks', label: 'Risk Frameworks', icon: Layers, path: '/frameworks' },
   { id: 'data-analysis', label: 'Data Analysis', icon: Database, path: '/data-analysis' },
   { id: 'alerts', label: 'Alerts', icon: AlertTriangle, path: '/alerts', badge: 3 },
@@ -216,7 +217,7 @@ function NavItemLink({ item, isActive, collapsed }: NavItemLinkProps) {
         ${collapsed ? 'justify-center' : ''}
         ${
           isActive
-            ? 'bg-lumina-50 dark:bg-lumina-900/30 text-lumina-700 dark:text-lumina-400 hover:bg-lumina-100 dark:hover:bg-lumina-900/40'
+            ? 'bg-risk-50 dark:bg-risk-900/30 text-risk-700 dark:text-risk-400 hover:bg-risk-100 dark:hover:bg-risk-900/40'
             : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
         }
       `}
@@ -224,7 +225,7 @@ function NavItemLink({ item, isActive, collapsed }: NavItemLinkProps) {
     >
       <Icon
         className={`w-5 h-5 flex-shrink-0 ${
-          isActive ? 'text-lumina-600 dark:text-lumina-400' : ''
+          isActive ? 'text-risk-600 dark:text-risk-400' : ''
         }`}
       />
       {!collapsed && (
@@ -236,7 +237,7 @@ function NavItemLink({ item, isActive, collapsed }: NavItemLinkProps) {
                 px-2 py-0.5 text-xs font-semibold rounded-full
                 ${
                   isActive
-                    ? 'bg-lumina-200 dark:bg-lumina-800 text-lumina-700 dark:text-lumina-300'
+                    ? 'bg-risk-200 dark:bg-risk-800 text-risk-700 dark:text-risk-300'
                     : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
                 }
               `}

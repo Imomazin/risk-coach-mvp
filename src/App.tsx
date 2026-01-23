@@ -20,6 +20,7 @@ import { Settings } from './pages/Settings';
 import { Admin } from './pages/Admin';
 import { DataAnalysis } from './pages/DataAnalysis';
 import { APIGateway } from './pages/APIGateway';
+import { RiskIndicators } from './pages/RiskIndicators';
 
 function App() {
   const { isAuthenticated } = useAuth();
@@ -142,6 +143,14 @@ function App() {
         element={
           <ProtectedRoute>
             <APIGateway />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/risk-indicators"
+        element={
+          <ProtectedRoute>
+            <RiskIndicators />
           </ProtectedRoute>
         }
       />

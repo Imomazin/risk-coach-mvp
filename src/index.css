@@ -5,28 +5,55 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  /* Lumina R Primary - Deep Violet/Indigo */
-  --color-lumina-50: #f5f3ff;
-  --color-lumina-100: #ede9fe;
-  --color-lumina-200: #ddd6fe;
-  --color-lumina-300: #c4b5fd;
-  --color-lumina-400: #a78bfa;
-  --color-lumina-500: #8b5cf6;
-  --color-lumina-600: #7c3aed;
-  --color-lumina-700: #6d28d9;
-  --color-lumina-800: #5b21b6;
-  --color-lumina-900: #4c1d95;
-  --color-lumina-950: #2e1065;
+  /* ================================================================
+     RISK SEMANTIC COLOR SYSTEM
+     Primary: Risk Red - for severity, escalation, thresholds
+     Secondary: Olive Green - for controls working, mitigation, assurance
+     ================================================================ */
 
-  /* Risk colors */
-  --color-risk-low: #10b981;
-  --color-risk-medium: #f59e0b;
-  --color-risk-high: #ef4444;
-  --color-risk-critical: #dc2626;
+  /* Risk Red - Primary semantic color for risk presence and severity */
+  --color-risk-50: #fef2f2;
+  --color-risk-100: #fee2e2;
+  --color-risk-200: #fecaca;
+  --color-risk-300: #fca5a5;
+  --color-risk-400: #f87171;
+  --color-risk-500: #ef4444;
+  --color-risk-600: #dc2626;
+  --color-risk-700: #b91c1c;
+  --color-risk-800: #991b1b;
+  --color-risk-900: #7f1d1d;
+  --color-risk-950: #450a0a;
 
-  /* Custom shadows */
-  --shadow-lumina: 0 0 0 3px rgba(139, 92, 246, 0.1);
-  --shadow-lumina-lg: 0 10px 40px -10px rgba(139, 92, 246, 0.2);
+  /* Olive Green - Secondary color for controls, mitigation, assurance */
+  --color-olive-50: #f7f8f3;
+  --color-olive-100: #ecefe3;
+  --color-olive-200: #d9dfc7;
+  --color-olive-300: #bcc8a1;
+  --color-olive-400: #9cad78;
+  --color-olive-500: #7d9156;
+  --color-olive-600: #627343;
+  --color-olive-700: #4c5a36;
+  --color-olive-800: #3f4a2f;
+  --color-olive-900: #363f2a;
+  --color-olive-950: #1b2213;
+
+  /* Lumina neutral accent - for UI elements (not risk signals) */
+  --color-lumina-50: #f8fafc;
+  --color-lumina-100: #f1f5f9;
+  --color-lumina-200: #e2e8f0;
+  --color-lumina-300: #cbd5e1;
+  --color-lumina-400: #94a3b8;
+  --color-lumina-500: #64748b;
+  --color-lumina-600: #475569;
+  --color-lumina-700: #334155;
+  --color-lumina-800: #1e293b;
+  --color-lumina-900: #0f172a;
+  --color-lumina-950: #020617;
+
+  /* Custom shadows - Risk-focused */
+  --shadow-risk: 0 0 0 3px rgba(220, 38, 38, 0.15);
+  --shadow-risk-lg: 0 10px 40px -10px rgba(220, 38, 38, 0.25);
+  --shadow-olive: 0 0 0 3px rgba(125, 145, 86, 0.15);
   --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
   --shadow-card-hover: 0 10px 40px -15px rgba(0, 0, 0, 0.15);
 

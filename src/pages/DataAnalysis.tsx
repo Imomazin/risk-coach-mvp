@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import { Layout } from '../components/layout/Layout';
 import { ERMAnalysisPanel } from '../components/analysis/ERMAnalysisPanel';
@@ -388,14 +388,8 @@ export function DataAnalysis() {
     setIsAnalyzing(false);
   };
 
-  // Auto-load all analyzed files into the store when files change
-  useEffect(() => {
-    files.forEach(file => {
-      if (file.analyzed && file.ermDataType && file.ermDataType !== 'generic') {
-        loadFromAnalysis(file.ermDataType, file.data, file.columnNames);
-      }
-    });
-  }, [files, loadFromAnalysis]);
+  // NOTE: Data is loaded into the unified store directly in runAnalysis()
+  // No auto-reload effect needed - this prevents duplicate loading and potential loops
 
   const deleteFile = (fileId: string) => {
     setFiles(prev => prev.filter(f => f.id !== fileId));

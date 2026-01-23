@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useCallback, useRef } from 'react';
+import * as XLSX from 'xlsx';
 import { Layout } from '../components/layout';
 import { Card, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -28,6 +29,11 @@ import {
   Signal,
   Radio,
   Radar,
+  Upload,
+  FileSpreadsheet,
+  Sparkles,
+  X,
+  Table,
 } from 'lucide-react';
 
 // Indicator classification types
@@ -63,8 +69,172 @@ interface CoverageAnalysis {
   recommendation: string;
 }
 
+// Parse CSV to array of objects
+function parseCSV(csvText: string): { data: Record<string, unknown>[]; columns: string[] } {
+  const lines = csvText.trim().split('\n');
+  if (lines.length < 2) return { data: [], columns: [] };
+
+  const delimiter = lines[0].includes('\t') ? '\t' : ',';
+  const headers = lines[0].split(delimiter).map(h => h.trim().replace(/^"|"$/g, ''));
+  const data: Record<string, unknown>[] = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const values = lines[i].split(delimiter).map(v => v.trim().replace(/^"|"$/g, ''));
+    const row: Record<string, unknown> = {};
+    headers.forEach((header, idx) => {
+      const value = values[idx] || '';
+      const num = parseFloat(value);
+      row[header] = !isNaN(num) && value !== '' ? num : value;
+    });
+    data.push(row);
+  }
+
+  return { data, columns: headers };
+}
+
+// Detect if uploaded data is KRI data
+function isKRIData(columns: string[]): boolean {
+  const kriPatterns = ['indicator', 'kri', 'threshold', 'current', 'metric', 'target', 'actual', 'limit'];
+  const lowerColumns = columns.map(c => c.toLowerCase());
+  const matchCount = kriPatterns.filter(pattern =>
+    lowerColumns.some(col => col.includes(pattern))
+  ).length;
+  return matchCount >= 2;
+}
+
 export function RiskIndicators() {
-  const { kris, risks, isLoaded } = useRiskIntelligence();
+  const { kris, risks, isLoaded, loadFromAnalysis } = useRiskIntelligence();
+
+  // Upload state
+  const [showUpload, setShowUpload] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [uploadedData, setUploadedData] = useState<{
+    fileName: string;
+    data: Record<string, unknown>[];
+    columns: string[];
+    rows: number;
+  } | null>(null);
+  const [previewData, setPreviewData] = useState<Record<string, unknown>[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // File handling
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
+
+  const processFile = useCallback(async (file: File) => {
+    const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+
+    if (isExcel) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target?.result as ArrayBuffer);
+          const workbook = XLSX.read(data, { type: 'array' });
+
+          // Find sheet with KRI data (check all sheets)
+          for (const sheetName of workbook.SheetNames) {
+            const worksheet = workbook.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, { defval: '' });
+
+            if (jsonData.length > 0) {
+              const columns = Object.keys(jsonData[0]);
+
+              // Check if this looks like KRI data
+              if (isKRIData(columns)) {
+                setUploadedData({
+                  fileName: file.name + (workbook.SheetNames.length > 1 ? ` (${sheetName})` : ''),
+                  data: jsonData,
+                  columns,
+                  rows: jsonData.length,
+                });
+                setPreviewData(jsonData.slice(0, 5));
+                return;
+              }
+            }
+          }
+
+          // If no KRI sheet found, use first sheet with data
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const jsonData = XLSX.utils.sheet_to_json<Record<string, unknown>>(firstSheet, { defval: '' });
+          if (jsonData.length > 0) {
+            setUploadedData({
+              fileName: file.name,
+              data: jsonData,
+              columns: Object.keys(jsonData[0]),
+              rows: jsonData.length,
+            });
+            setPreviewData(jsonData.slice(0, 5));
+          }
+        } catch (error) {
+          console.error('Error parsing Excel file:', error);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    } else {
+      // CSV handling
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result as string;
+        const { data, columns } = parseCSV(content);
+
+        if (data.length > 0) {
+          setUploadedData({
+            fileName: file.name,
+            data,
+            columns,
+            rows: data.length,
+          });
+          setPreviewData(data.slice(0, 5));
+        }
+      };
+      reader.readAsText(file);
+    }
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    const validFile = files.find(f =>
+      f.name.endsWith('.csv') || f.name.endsWith('.xlsx') || f.name.endsWith('.xls')
+    );
+    if (validFile) processFile(validFile);
+  }, [processFile]);
+
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) processFile(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }, [processFile]);
+
+  const analyzeAndLoad = async () => {
+    if (!uploadedData) return;
+
+    setIsAnalyzing(true);
+    await new Promise(resolve => setTimeout(resolve, 1200)); // UX delay
+
+    // Load as KRI metrics into the unified store
+    loadFromAnalysis('kri_metrics', uploadedData.data, uploadedData.columns);
+
+    setIsAnalyzing(false);
+    setShowUpload(false);
+    setUploadedData(null);
+    setPreviewData([]);
+  };
+
+  const clearUpload = () => {
+    setUploadedData(null);
+    setPreviewData([]);
+  };
 
   // Enhanced indicators with classification and analysis
   const enhancedIndicators = useMemo((): EnhancedIndicator[] => {
@@ -285,10 +455,162 @@ export function RiskIndicators() {
               No Indicator Data Loaded
             </p>
             <p className="text-xs text-amber-600 dark:text-amber-500">
-              Upload KRI data via Data Analysis to enable indicator intelligence
+              Upload KRI data to enable indicator intelligence
             </p>
           </div>
+          <Button variant="primary" size="sm" onClick={() => setShowUpload(true)}>
+            <Upload className="w-4 h-4" />
+            Upload KRI Data
+          </Button>
         </div>
+      )}
+
+      {/* Upload Panel */}
+      {showUpload && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Upload Key Risk Indicator Data</CardTitle>
+            <button onClick={() => { setShowUpload(false); clearUpload(); }} className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700">
+              <X className="w-5 h-5 text-slate-400" />
+            </button>
+          </CardHeader>
+
+          {!uploadedData ? (
+            <div
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+              className={`
+                p-8 border-2 border-dashed rounded-xl text-center cursor-pointer transition-all
+                ${isDragging
+                  ? 'border-risk-500 bg-risk-50 dark:bg-risk-900/20'
+                  : 'border-slate-200 dark:border-slate-700 hover:border-risk-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                }
+              `}
+            >
+              <Upload className={`w-12 h-12 mx-auto mb-3 ${isDragging ? 'text-risk-500' : 'text-slate-400'}`} />
+              <p className="text-base font-medium text-slate-700 dark:text-slate-300 mb-1">
+                {isDragging ? 'Drop your file here' : 'Drag & drop KRI file or click to browse'}
+              </p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Supports Excel (.xlsx, .xls) and CSV files
+              </p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv,.xlsx,.xls"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* File Info */}
+              <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-risk-100 dark:bg-risk-900/30 flex items-center justify-center">
+                    <FileSpreadsheet className="w-5 h-5 text-risk-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-slate-900 dark:text-white">{uploadedData.fileName}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      {uploadedData.rows} indicators • {uploadedData.columns.length} fields
+                    </p>
+                  </div>
+                </div>
+                <button onClick={clearUpload} className="p-2 text-slate-400 hover:text-risk-500 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Detected Columns */}
+              <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-2">Detected Fields</p>
+                <div className="flex flex-wrap gap-2">
+                  {uploadedData.columns.map(col => (
+                    <span key={col} className="px-2 py-1 text-xs rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300">
+                      {col}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Data Preview */}
+              <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
+                <div className="px-4 py-2 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2">
+                  <Table className="w-4 h-4 text-slate-400" />
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Data Preview</span>
+                </div>
+                <div className="overflow-x-auto max-h-48">
+                  <table className="w-full text-sm">
+                    <thead className="bg-slate-50 dark:bg-slate-900 sticky top-0">
+                      <tr>
+                        {uploadedData.columns.slice(0, 6).map(col => (
+                          <th key={col} className="px-3 py-2 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                            {col}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                      {previewData.map((row, idx) => (
+                        <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-900/50">
+                          {uploadedData.columns.slice(0, 6).map(col => (
+                            <td key={col} className="px-3 py-2 text-slate-600 dark:text-slate-300 whitespace-nowrap max-w-[150px] truncate">
+                              {String(row[col] ?? '—')}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center justify-between pt-2">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {isKRIData(uploadedData.columns) ? (
+                    <span className="text-olive-600 dark:text-olive-400 flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" /> KRI data structure detected
+                    </span>
+                  ) : (
+                    <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" /> Data will be analyzed as generic KRI
+                    </span>
+                  )}
+                </p>
+                <div className="flex gap-2">
+                  <Button variant="secondary" size="sm" onClick={clearUpload}>
+                    Cancel
+                  </Button>
+                  <Button variant="primary" size="sm" onClick={analyzeAndLoad} disabled={isAnalyzing}>
+                    {isAnalyzing ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        Analyzing...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" />
+                        Analyze & Load Indicators
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Help text */}
+          <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              <strong>Expected columns:</strong> Risk ID, Indicator Name, Current Value, Threshold, Status (Red/Amber/Green), Trend (Up/Down/Stable).
+              The system will automatically detect and map your data fields.
+            </p>
+          </div>
+        </Card>
       )}
 
       {/* Action Bar */}
@@ -300,6 +622,10 @@ export function RiskIndicators() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={() => setShowUpload(!showUpload)}>
+            <Upload className="w-4 h-4" />
+            {showUpload ? 'Hide Upload' : 'Upload Data'}
+          </Button>
           <Button variant="ghost" size="sm">
             <RefreshCw className="w-4 h-4" />
             Refresh

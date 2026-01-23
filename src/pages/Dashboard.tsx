@@ -613,17 +613,17 @@ export function Dashboard() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'green': return 'bg-emerald-500';
+      case 'green': return 'bg-olive-500';
       case 'amber': return 'bg-amber-500';
-      case 'red': return 'bg-red-500';
+      case 'red': return 'bg-risk-500';
       default: return 'bg-slate-500';
     }
   };
 
   const getTrendIcon = (trend: string) => {
     switch (trend) {
-      case 'up': return <TrendingUp className="w-4 h-4 text-emerald-500" />;
-      case 'down': return <TrendingDown className="w-4 h-4 text-red-500" />;
+      case 'up': return <TrendingUp className="w-4 h-4 text-olive-500" />;
+      case 'down': return <TrendingDown className="w-4 h-4 text-risk-500" />;
       default: return <CircleDot className="w-4 h-4 text-slate-400" />;
     }
   };
@@ -633,8 +633,8 @@ export function Dashboard() {
       title="Risk Intelligence Dashboard"
       subtitle="Comprehensive risk monitoring, analysis, and management platform"
     >
-      {/* Dashboard Tabs */}
-      <div className="mb-6 border-b border-slate-200 dark:border-slate-700">
+      {/* Dashboard Tabs - Risk-led accent */}
+      <div className="mb-6 border-b border-slate-200 dark:border-slate-800">
         <nav className="flex gap-1 -mb-px overflow-x-auto scrollbar-hide">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -644,14 +644,14 @@ export function Dashboard() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`
-                  flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap
+                  flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap tracking-tight
                   ${isActive
-                    ? 'border-lumina-600 text-lumina-600 dark:text-lumina-400'
+                    ? 'border-risk-500 text-risk-600 dark:text-risk-400'
                     : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200'
                   }
                 `}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className={`w-4 h-4 ${isActive ? 'text-risk-500' : ''}`} />
                 {tab.label}
               </button>
             );
@@ -664,20 +664,20 @@ export function Dashboard() {
         <>
           {/* Executive Intelligence Banner - Shows when live data is loaded */}
           {isLoaded && intelligence && (
-            <div className="mb-6 p-6 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 text-white">
+            <div className="mb-6 p-6 rounded-xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white border border-slate-800 animate-fade-in" style={{ boxShadow: '0 0 40px rgba(0,0,0,0.5)' }}>
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h2 className="text-xl font-display font-bold flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-lumina-400" />
+                  <h2 className="text-xl font-display font-bold flex items-center gap-2 tracking-tight">
+                    <Sparkles className="w-5 h-5 text-risk-400" />
                     Live Risk Intelligence
                   </h2>
-                  <p className="text-white/70 text-sm mt-1">Data-driven insights from your uploaded risk data</p>
+                  <p className="text-white/60 text-sm mt-1">Data-driven insights from your uploaded risk data</p>
                 </div>
-                <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  intelligence.systemicIndicator.level === 'Critical' ? 'bg-red-500/30 text-red-300' :
+                <div className={`px-4 py-1.5 rounded-md text-sm font-bold tracking-tight ${
+                  intelligence.systemicIndicator.level === 'Critical' ? 'bg-risk-500/30 text-risk-300 glow-risk-sm' :
                   intelligence.systemicIndicator.level === 'Elevated' ? 'bg-amber-500/30 text-amber-300' :
                   intelligence.systemicIndicator.level === 'Moderate' ? 'bg-yellow-500/30 text-yellow-300' :
-                  'bg-emerald-500/30 text-emerald-300'
+                  'bg-olive-500/30 text-olive-300'
                 }`}>
                   Systemic Risk: {intelligence.systemicIndicator.level} ({intelligence.systemicIndicator.score}/100)
                 </div>

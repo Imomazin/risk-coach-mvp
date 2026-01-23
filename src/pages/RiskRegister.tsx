@@ -199,9 +199,9 @@ export function RiskRegister() {
             placeholder="Search risks..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800
+            className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900
                      text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500
-                     focus:outline-none focus:ring-2 focus:ring-lumina-500/20 focus:border-lumina-500"
+                     focus:outline-none focus:ring-2 focus:ring-risk-500/20 focus:border-risk-500"
           />
         </div>
 
@@ -210,8 +210,8 @@ export function RiskRegister() {
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-700 dark:text-slate-300
-                     focus:outline-none focus:ring-2 focus:ring-lumina-500/20 focus:border-lumina-500"
+            className="px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-700 dark:text-slate-300
+                     focus:outline-none focus:ring-2 focus:ring-risk-500/20 focus:border-risk-500"
           >
             <option value="all">All Categories</option>
             {availableCategories.map(([value, label]) => (
@@ -222,8 +222,8 @@ export function RiskRegister() {
           <select
             value={selectedLevel}
             onChange={(e) => setSelectedLevel(e.target.value as RiskLevel | 'all')}
-            className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-700 dark:text-slate-300
-                     focus:outline-none focus:ring-2 focus:ring-lumina-500/20 focus:border-lumina-500"
+            className="px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-700 dark:text-slate-300
+                     focus:outline-none focus:ring-2 focus:ring-risk-500/20 focus:border-risk-500"
           >
             <option value="all">All Levels</option>
             <option value="low">Low</option>
@@ -305,23 +305,30 @@ export function RiskRegister() {
               {filteredRisks.map((risk) => {
                 const CategoryIcon = getCategoryIcon(risk.category);
                 return (
-                  <tr key={risk.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                  <tr
+                    key={risk.id}
+                    className={`transition-all ${
+                      risk.isEscalated
+                        ? 'bg-risk-50/30 dark:bg-risk-950/20 hover:bg-risk-50/50 dark:hover:bg-risk-950/30 border-l-2 border-l-risk-500'
+                        : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                    } ${risk.level === 'critical' || risk.level === 'high' ? 'escalated' : ''}`}
+                  >
                     <td className="py-4 px-4">
                       <div className="flex items-start gap-3">
-                        <div className={`p-2 rounded-lg ${risk.isEscalated ? 'bg-red-100 dark:bg-red-900/30 text-red-600' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400'}`}>
+                        <div className={`p-2 rounded-md ${risk.isEscalated ? 'bg-risk-100 dark:bg-risk-900/40 text-risk-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
                           <CategoryIcon className="w-4 h-4" />
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <p className="font-medium text-slate-900 dark:text-white">{risk.title}</p>
+                            <p className="font-semibold text-slate-900 dark:text-white tracking-tight">{risk.title}</p>
                             {risk.isEscalated && (
-                              <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-red-100 dark:bg-red-900/30 text-red-600 rounded">
-                                ESCALATED
+                              <span className="risk-badge risk-badge--critical uppercase text-[10px]" style={{ boxShadow: '0 0 6px rgba(220, 38, 38, 0.3)' }}>
+                                Escalated
                               </span>
                             )}
                             {risk.appetiteAlignment === 'Outside Appetite' && (
-                              <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-600 rounded">
-                                OUTSIDE APPETITE
+                              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 rounded uppercase">
+                                Outside Appetite
                               </span>
                             )}
                           </div>
@@ -340,11 +347,14 @@ export function RiskRegister() {
                       <RiskBadge level={risk.level} />
                     </td>
                     <td className="py-4 px-4 text-center">
-                      <span className={`text-lg font-bold ${
-                        risk.score >= 15 ? 'text-red-600' :
-                        risk.score >= 8 ? 'text-amber-600' :
-                        risk.score >= 4 ? 'text-yellow-600' : 'text-emerald-600'
-                      }`}>
+                      <span
+                        className={`metric-number--sm font-bold ${
+                          risk.score >= 15 ? 'text-risk-600 dark:text-risk-500' :
+                          risk.score >= 8 ? 'text-amber-600' :
+                          risk.score >= 4 ? 'text-yellow-600' : 'text-olive-600 dark:text-olive-500'
+                        }`}
+                        style={risk.score >= 15 ? { textShadow: '0 0 8px rgba(220, 38, 38, 0.3)' } : undefined}
+                      >
                         {risk.score}
                       </span>
                     </td>
@@ -362,12 +372,12 @@ export function RiskRegister() {
                       </td>
                     )}
                     <td className="py-4 px-4">
-                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full capitalize ${
-                        risk.status === 'resolved' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' :
-                        risk.status === 'mitigating' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' :
-                        risk.status === 'assessing' ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' :
-                        risk.status === 'accepted' ? 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400' :
-                        'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded capitalize ${
+                        risk.status === 'resolved' ? 'bg-olive-100 dark:bg-olive-900/30 text-olive-700 dark:text-olive-400' :
+                        risk.status === 'mitigating' ? 'bg-olive-50 dark:bg-olive-900/20 text-olive-600 dark:text-olive-400' :
+                        risk.status === 'assessing' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' :
+                        risk.status === 'accepted' ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400' :
+                        'bg-risk-100 dark:bg-risk-900/30 text-risk-700 dark:text-risk-400'
                       }`}>
                         {risk.status}
                       </span>

@@ -6,12 +6,13 @@
 
 @theme {
   /* ================================================================
-     RISK SEMANTIC COLOR SYSTEM
-     Primary: Risk Red - for severity, escalation, thresholds
+     LUMINA R - VIRGIN ATLANTIC INSPIRED RISK SEMANTIC COLOR SYSTEM
+     Primary: Risk Red - for severity, escalation, thresholds, urgency
      Secondary: Olive Green - for controls working, mitigation, assurance
+     Neutral: Slate - for UI chrome, inactive states
      ================================================================ */
 
-  /* Risk Red - Primary semantic color for risk presence and severity */
+  /* Risk Red - Primary semantic color (Virgin Atlantic inspired) */
   --color-risk-50: #fef2f2;
   --color-risk-100: #fee2e2;
   --color-risk-200: #fecaca;
@@ -37,6 +38,18 @@
   --color-olive-900: #363f2a;
   --color-olive-950: #1b2213;
 
+  /* Amber - Warning states */
+  --color-warning-50: #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-200: #fde68a;
+  --color-warning-300: #fcd34d;
+  --color-warning-400: #fbbf24;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+  --color-warning-700: #b45309;
+  --color-warning-800: #92400e;
+  --color-warning-900: #78350f;
+
   /* Lumina neutral accent - for UI elements (not risk signals) */
   --color-lumina-50: #f8fafc;
   --color-lumina-100: #f1f5f9;
@@ -52,21 +65,40 @@
 
   /* Custom shadows - Risk-focused */
   --shadow-risk: 0 0 0 3px rgba(220, 38, 38, 0.15);
+  --shadow-risk-glow: 0 0 20px rgba(220, 38, 38, 0.3);
   --shadow-risk-lg: 0 10px 40px -10px rgba(220, 38, 38, 0.25);
   --shadow-olive: 0 0 0 3px rgba(125, 145, 86, 0.15);
+  --shadow-olive-glow: 0 0 15px rgba(125, 145, 86, 0.2);
   --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-  --shadow-card-hover: 0 10px 40px -15px rgba(0, 0, 0, 0.15);
+  --shadow-card-hover: 0 10px 40px -15px rgba(0, 0, 0, 0.2);
+  --shadow-panel: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-elevated: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
 
   /* Fonts */
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-display: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
 
+  /* Letter spacing */
+  --tracking-tighter: -0.05em;
+  --tracking-tight: -0.025em;
+
+  /* Border radius - slightly reduced for seriousness */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+
   /* Animations */
-  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  --animate-fade-in: fadeIn 0.5s ease-out;
+  --animate-pulse-slow: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-pulse-risk: pulse-risk 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-fade-in: fadeIn 0.4s ease-out;
   --animate-slide-up: slideUp 0.3s ease-out;
+  --animate-slide-in: slideIn 0.3s ease-out;
+  --animate-glow-risk: glow-risk 2s ease-in-out infinite;
+  --animate-check-in: checkIn 0.3s ease-out;
 }
 
+/* Keyframe animations */
 @keyframes fadeIn {
   0% { opacity: 0; }
   100% { opacity: 1; }
@@ -75,6 +107,53 @@
 @keyframes slideUp {
   0% { transform: translateY(10px); opacity: 0; }
   100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideIn {
+  0% { transform: translateX(-10px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes pulse-risk {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(220, 38, 38, 0);
+  }
+}
+
+@keyframes glow-risk {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(220, 38, 38, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(220, 38, 38, 0.5);
+  }
+}
+
+@keyframes checkIn {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes data-refresh {
+  0% { opacity: 0.5; }
+  100% { opacity: 1; }
 }
 
 @layer base {
@@ -92,6 +171,19 @@
     @apply text-white antialiased;
     background-color: #000000;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    letter-spacing: -0.01em;
+  }
+
+  /* Tighter headings */
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.025em;
+    font-family: var(--font-display);
+  }
+
+  /* Bold, grounded numbers */
+  .font-mono, [class*="tabular"] {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
   }
 
   /* Light mode - only when explicitly set */
@@ -148,6 +240,7 @@
     border-color: #111111 !important;
   }
 
+  /* Scrollbar styling */
   ::-webkit-scrollbar {
     @apply w-2;
   }
@@ -173,5 +266,293 @@
   html.light ::-webkit-scrollbar-thumb,
   html:not(.dark):not(.black) ::-webkit-scrollbar-thumb {
     @apply bg-slate-300;
+  }
+}
+
+@layer components {
+  /* ================================================================
+     PREMIUM STATUS PANELS (replaces basic cards for metrics)
+     ================================================================ */
+  .status-panel {
+    @apply relative bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden;
+    box-shadow: var(--shadow-panel);
+    transition: all 0.2s ease;
+  }
+
+  .status-panel:hover {
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-1px);
+  }
+
+  .status-panel--critical {
+    @apply border-t-2 border-t-risk-500;
+  }
+
+  .status-panel--warning {
+    @apply border-t-2 border-t-amber-500;
+  }
+
+  .status-panel--success {
+    @apply border-b-2 border-b-olive-500;
+  }
+
+  .status-panel--neutral {
+    @apply border-t-2 border-t-slate-400;
+  }
+
+  /* Panel metric number styling */
+  .status-panel .metric-value {
+    @apply text-3xl font-bold tracking-tight;
+    font-family: var(--font-display);
+  }
+
+  .status-panel .metric-label {
+    @apply text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide;
+  }
+
+  /* ================================================================
+     SECTION DIVIDERS - Red accent lines
+     ================================================================ */
+  .section-divider {
+    @apply h-px bg-gradient-to-r from-risk-500/50 via-risk-500/20 to-transparent;
+  }
+
+  .section-divider--full {
+    @apply h-px bg-gradient-to-r from-risk-500/60 via-risk-500/40 to-risk-500/60;
+  }
+
+  /* ================================================================
+     RISK BADGES - Consistent semantic colors
+     ================================================================ */
+  .risk-badge {
+    @apply inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded;
+  }
+
+  .risk-badge--critical {
+    @apply bg-risk-100 dark:bg-risk-900/40 text-risk-700 dark:text-risk-400;
+  }
+
+  .risk-badge--high {
+    @apply bg-risk-50 dark:bg-risk-900/30 text-risk-600 dark:text-risk-400;
+  }
+
+  .risk-badge--medium {
+    @apply bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400;
+  }
+
+  .risk-badge--low {
+    @apply bg-olive-100 dark:bg-olive-900/30 text-olive-700 dark:text-olive-400;
+  }
+
+  /* ================================================================
+     NAV ITEM STYLING - Control spine feel
+     ================================================================ */
+  .nav-item {
+    @apply relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200;
+  }
+
+  .nav-item--active {
+    @apply bg-risk-50 dark:bg-risk-950/50 text-risk-700 dark:text-risk-400;
+  }
+
+  .nav-item--active::before {
+    content: '';
+    @apply absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-risk-500 rounded-full;
+  }
+
+  .nav-item:not(.nav-item--active):hover {
+    @apply bg-slate-100 dark:bg-slate-800/50;
+    box-shadow: inset 0 0 0 1px rgba(220, 38, 38, 0.1);
+  }
+
+  /* ================================================================
+     ALERT CARDS - Operations room feel
+     ================================================================ */
+  .alert-card {
+    @apply relative bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden;
+  }
+
+  .alert-card--critical {
+    @apply border-l-4 border-l-risk-500 bg-risk-50/30 dark:bg-risk-950/20;
+  }
+
+  .alert-card--warning {
+    @apply border-l-4 border-l-amber-500 bg-amber-50/30 dark:bg-amber-950/20;
+  }
+
+  .alert-card--resolved {
+    @apply border-l-4 border-l-olive-500 bg-olive-50/30 dark:bg-olive-950/20;
+  }
+
+  /* ================================================================
+     HEAT MAP CELLS - High contrast
+     ================================================================ */
+  .heatmap-cell {
+    @apply relative transition-all duration-200;
+  }
+
+  .heatmap-cell--extreme {
+    @apply bg-risk-600;
+    box-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
+  }
+
+  .heatmap-cell--high {
+    @apply bg-risk-500;
+  }
+
+  .heatmap-cell--medium {
+    @apply bg-amber-500;
+  }
+
+  .heatmap-cell--low {
+    @apply bg-olive-500;
+  }
+
+  /* ================================================================
+     DATA TABLE STYLING - Serious, scannable
+     ================================================================ */
+  .data-table {
+    @apply w-full text-sm;
+  }
+
+  .data-table thead {
+    @apply bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700;
+  }
+
+  .data-table th {
+    @apply px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider;
+  }
+
+  .data-table td {
+    @apply px-4 py-3 border-b border-slate-100 dark:border-slate-800;
+  }
+
+  .data-table tr:hover td {
+    @apply bg-slate-50 dark:bg-slate-800/30;
+  }
+
+  .data-table tr.escalated:hover td {
+    @apply bg-risk-50/50 dark:bg-risk-950/30;
+  }
+
+  /* ================================================================
+     MICRO-INTERACTIONS
+     ================================================================ */
+  .animate-fade-in {
+    animation: fadeIn 0.4s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+
+  .animate-pulse-risk {
+    animation: pulse-risk 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-glow-risk {
+    animation: glow-risk 2s ease-in-out infinite;
+  }
+
+  .animate-check-in {
+    animation: checkIn 0.3s ease-out;
+  }
+
+  .data-refresh {
+    animation: data-refresh 0.5s ease-out;
+  }
+
+  /* Hover glow effect for nav items */
+  .hover-glow-risk:hover {
+    box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.15), 0 4px 12px rgba(220, 38, 38, 0.1);
+  }
+
+  /* ================================================================
+     STATUS INDICATORS
+     ================================================================ */
+  .status-dot {
+    @apply w-2 h-2 rounded-full;
+  }
+
+  .status-dot--critical {
+    @apply bg-risk-500;
+    box-shadow: 0 0 6px rgba(220, 38, 38, 0.6);
+  }
+
+  .status-dot--warning {
+    @apply bg-amber-500;
+    box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
+  }
+
+  .status-dot--success {
+    @apply bg-olive-500;
+    box-shadow: 0 0 6px rgba(125, 145, 86, 0.6);
+  }
+
+  /* ================================================================
+     MICRO-COPY STATUS LABELS
+     ================================================================ */
+  .status-micro {
+    @apply text-[10px] font-semibold uppercase tracking-wider;
+  }
+
+  .status-micro--attention {
+    @apply text-risk-600 dark:text-risk-400;
+  }
+
+  .status-micro--monitoring {
+    @apply text-amber-600 dark:text-amber-400;
+  }
+
+  .status-micro--stable {
+    @apply text-olive-600 dark:text-olive-400;
+  }
+}
+
+@layer utilities {
+  /* Risk glow utilities */
+  .glow-risk {
+    box-shadow: 0 0 20px rgba(220, 38, 38, 0.3);
+  }
+
+  .glow-risk-sm {
+    box-shadow: 0 0 10px rgba(220, 38, 38, 0.2);
+  }
+
+  .glow-olive {
+    box-shadow: 0 0 15px rgba(125, 145, 86, 0.2);
+  }
+
+  /* Border accents */
+  .border-t-risk {
+    border-top: 2px solid var(--color-risk-500);
+  }
+
+  .border-l-risk {
+    border-left: 3px solid var(--color-risk-500);
+  }
+
+  .border-b-olive {
+    border-bottom: 2px solid var(--color-olive-500);
+  }
+
+  /* Text utilities */
+  .text-risk-gradient {
+    @apply bg-gradient-to-r from-risk-500 to-risk-700 bg-clip-text text-transparent;
+  }
+
+  /* Cockpit readout number styling */
+  .metric-number {
+    @apply text-3xl font-bold tracking-tight;
+    font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .metric-number--lg {
+    @apply text-4xl;
+  }
+
+  .metric-number--sm {
+    @apply text-2xl;
   }
 }

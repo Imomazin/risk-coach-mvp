@@ -108,14 +108,14 @@ const alertIcons: Record<AlertType, React.ComponentType<{ className?: string }>>
 };
 
 const alertColors: Record<AlertType, string> = {
-  overdue: 'text-red-500 bg-red-50 dark:bg-red-900/30',
-  escalation: 'text-amber-500 bg-amber-50 dark:bg-amber-900/30',
-  new_risk: 'text-blue-500 bg-blue-50 dark:bg-blue-900/30',
-  status_change: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-900/30',
-  reminder: 'text-lumina-500 bg-lumina-50 dark:bg-lumina-900/30',
-  breach: 'text-red-500 bg-red-50 dark:bg-red-900/30',
-  concentration: 'text-amber-500 bg-amber-50 dark:bg-amber-900/30',
-  appetite: 'text-red-500 bg-red-50 dark:bg-red-900/30',
+  overdue: 'text-risk-500 bg-risk-50 dark:bg-risk-900/30',
+  escalation: 'text-risk-500 bg-risk-50 dark:bg-risk-900/30',
+  new_risk: 'text-amber-500 bg-amber-50 dark:bg-amber-900/30',
+  status_change: 'text-olive-500 bg-olive-50 dark:bg-olive-900/30',
+  reminder: 'text-slate-500 bg-slate-50 dark:bg-slate-800',
+  breach: 'text-risk-600 bg-risk-50 dark:bg-risk-900/40',
+  concentration: 'text-risk-500 bg-risk-50 dark:bg-risk-900/30',
+  appetite: 'text-risk-600 bg-risk-50 dark:bg-risk-900/40',
   trend: 'text-amber-500 bg-amber-50 dark:bg-amber-900/30',
 };
 
@@ -205,18 +205,22 @@ export function Alerts() {
 
   return (
     <Layout title="Alerts" subtitle="Intelligent alerts from your risk intelligence system">
-      {/* Live Data Banner */}
+      {/* Live Data Banner - Operations room style */}
       {isLoaded && intelligence && (
-        <div className="mb-6 p-4 rounded-xl bg-lumina-50 dark:bg-lumina-900/20 border border-lumina-200 dark:border-lumina-800">
+        <div className="mb-6 p-4 rounded-lg bg-slate-900 border border-slate-800 animate-fade-in">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-lumina-100 dark:bg-lumina-900/50 flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-lumina-600" />
+            <div className="w-10 h-10 rounded-md bg-risk-500/20 flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-risk-400" />
             </div>
             <div>
-              <h3 className="font-semibold text-lumina-900 dark:text-lumina-300">Live Alerts Active</h3>
-              <p className="text-sm text-lumina-700 dark:text-lumina-400">
-                Alerts are being generated from your uploaded risk data. {getUnacknowledgedAlerts().length} unacknowledged alerts.
+              <h3 className="font-semibold text-white tracking-tight">Live Alerts Active</h3>
+              <p className="text-sm text-slate-400">
+                {getUnacknowledgedAlerts().length} unacknowledged alerts from uploaded data
               </p>
+            </div>
+            <div className="ml-auto flex items-center gap-2">
+              <span className="status-dot status-dot--critical animate-pulse" />
+              <span className="text-xs text-risk-400 font-medium uppercase tracking-wider">Monitoring</span>
             </div>
           </div>
         </div>
@@ -329,8 +333,11 @@ export function Alerts() {
             return (
               <div
                 key={alert.id}
-                className={`p-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer ${
-                  !isRead ? 'bg-lumina-50/30 dark:bg-lumina-900/10' : ''
+                className={`relative p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer ${
+                  !isRead ? 'bg-slate-50/50 dark:bg-slate-800/30' : ''
+                } ${
+                  alert.severity === 'critical' ? 'border-l-4 border-l-risk-500 bg-risk-50/20 dark:bg-risk-950/20' :
+                  alert.severity === 'warning' ? 'border-l-4 border-l-amber-500 bg-amber-50/10 dark:bg-amber-950/10' : ''
                 }`}
                 onClick={() => markAsRead(alert.id)}
               >
@@ -345,15 +352,15 @@ export function Alerts() {
                         {alert.title}
                       </h4>
                       {!isRead && (
-                        <span className="w-2 h-2 rounded-full bg-lumina-500" />
+                        <span className="w-2 h-2 rounded-full bg-risk-500 animate-pulse" style={{ boxShadow: '0 0 6px rgba(220, 38, 38, 0.6)' }} />
                       )}
                       {alert.severity === 'critical' && (
-                        <span className="px-2 py-0.5 text-xs rounded-full bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 font-medium">
+                        <span className="risk-badge risk-badge--critical">
                           Critical
                         </span>
                       )}
                       {alert.severity === 'warning' && (
-                        <span className="px-2 py-0.5 text-xs rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 font-medium">
+                        <span className="px-2 py-0.5 text-xs rounded bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400 font-semibold">
                           Warning
                         </span>
                       )}

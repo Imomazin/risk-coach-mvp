@@ -79,7 +79,7 @@ export function Sidebar() {
   return (
     <aside
       className={`
-        fixed left-0 top-0 h-screen bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700
+        fixed left-0 top-0 h-screen bg-white dark:bg-black border-r border-slate-200 dark:border-slate-800
         flex flex-col transition-all duration-300 z-50
         ${collapsed ? 'w-20' : 'w-64'}
       `}
@@ -91,7 +91,7 @@ export function Sidebar() {
         </Link>
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          className="p-1.5 rounded-md text-slate-400 dark:text-slate-500 hover:text-risk-600 dark:hover:text-risk-400 hover:bg-risk-50 dark:hover:bg-risk-950/30 transition-colors"
         >
           {collapsed ? (
             <ChevronRight className="w-4 h-4" />
@@ -120,7 +120,9 @@ export function Sidebar() {
           />
         ))}
 
-        <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800">
+        {/* Red section divider */}
+        <div className="pt-4 mt-4">
+          <div className="section-divider mb-3" />
           {!collapsed && (
             <span className="px-3 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
               Settings
@@ -144,14 +146,14 @@ export function Sidebar() {
         <Link
           to="/alerts"
           className={`
-            w-full flex items-center gap-3 p-2.5 rounded-xl
-            text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200
+            w-full flex items-center gap-3 p-2.5 rounded-lg
+            text-slate-600 dark:text-slate-400 hover:bg-risk-50 dark:hover:bg-risk-950/30 hover:text-risk-600 dark:hover:text-risk-400 transition-all duration-200
             ${collapsed ? 'justify-center' : ''}
           `}
         >
           <div className="relative">
             <Bell className="w-5 h-5" />
-            <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
+            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-risk-500 rounded-full animate-pulse" style={{ boxShadow: '0 0 6px rgba(220, 38, 38, 0.6)' }} />
           </div>
           {!collapsed && (
             <span className="text-sm font-medium">Notifications</span>
@@ -161,17 +163,17 @@ export function Sidebar() {
         {/* User profile */}
         <div
           className={`
-            flex items-center gap-3 p-2.5 rounded-xl mt-1
-            bg-slate-50 dark:bg-slate-800
+            flex items-center gap-3 p-2.5 rounded-lg mt-1
+            bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800
             ${collapsed ? 'justify-center' : ''}
           `}
         >
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-lumina-500 to-lumina-700 flex items-center justify-center text-white font-semibold text-sm">
+          <div className="w-8 h-8 rounded-md bg-gradient-to-br from-risk-500 to-risk-700 flex items-center justify-center text-white font-semibold text-sm" style={{ boxShadow: '0 0 10px rgba(220, 38, 38, 0.3)' }}>
             {user ? getInitials(user.name) : 'U'}
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
+              <p className="text-sm font-semibold text-slate-900 dark:text-white truncate tracking-tight">
                 {user?.name || 'User'}
               </p>
               <p className="text-xs text-slate-500 dark:text-slate-400 truncate">Risk Manager</p>
@@ -183,8 +185,8 @@ export function Sidebar() {
         <button
           onClick={handleLogout}
           className={`
-            w-full flex items-center gap-3 p-2.5 rounded-xl mt-1
-            text-slate-600 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-all duration-200
+            w-full flex items-center gap-3 p-2.5 rounded-lg mt-1
+            text-slate-600 dark:text-slate-400 hover:bg-risk-50 dark:hover:bg-risk-950/20 hover:text-risk-600 dark:hover:text-risk-400 transition-all duration-200
             ${collapsed ? 'justify-center' : ''}
           `}
           title={collapsed ? 'Sign out' : undefined}
@@ -212,40 +214,55 @@ function NavItemLink({ item, isActive, collapsed }: NavItemLinkProps) {
     <Link
       to={item.path}
       className={`
-        w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+        relative w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
         transition-all duration-200
         ${collapsed ? 'justify-center' : ''}
         ${
           isActive
-            ? 'bg-risk-50 dark:bg-risk-900/30 text-risk-700 dark:text-risk-400 hover:bg-risk-100 dark:hover:bg-risk-900/40'
-            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+            ? 'bg-risk-50 dark:bg-risk-950/40 text-risk-700 dark:text-risk-400'
+            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
         }
       `}
+      style={isActive ? {} : undefined}
       title={collapsed ? item.label : undefined}
     >
+      {/* Red accent line for active state */}
+      {isActive && (
+        <span
+          className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-risk-500 rounded-full"
+          style={{ boxShadow: '0 0 8px rgba(220, 38, 38, 0.5)' }}
+        />
+      )}
+
       <Icon
-        className={`w-5 h-5 flex-shrink-0 ${
+        className={`w-5 h-5 flex-shrink-0 transition-colors ${
           isActive ? 'text-risk-600 dark:text-risk-400' : ''
         }`}
       />
       {!collapsed && (
         <>
-          <span className="flex-1 text-left">{item.label}</span>
+          <span className="flex-1 text-left tracking-tight">{item.label}</span>
           {item.badge && (
             <span
               className={`
-                px-2 py-0.5 text-xs font-semibold rounded-full
+                px-2 py-0.5 text-xs font-bold rounded-md
                 ${
                   isActive
-                    ? 'bg-risk-200 dark:bg-risk-800 text-risk-700 dark:text-risk-300'
+                    ? 'bg-risk-200 dark:bg-risk-900/60 text-risk-700 dark:text-risk-300'
                     : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
                 }
               `}
+              style={isActive ? { boxShadow: '0 0 6px rgba(220, 38, 38, 0.3)' } : undefined}
             >
               {item.badge}
             </span>
           )}
         </>
+      )}
+
+      {/* Hover glow effect */}
+      {!isActive && (
+        <span className="absolute inset-0 rounded-lg opacity-0 hover:opacity-100 transition-opacity pointer-events-none" style={{ boxShadow: 'inset 0 0 0 1px rgba(220, 38, 38, 0.1)' }} />
       )}
     </Link>
   );

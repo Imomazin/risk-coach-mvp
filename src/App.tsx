@@ -4,6 +4,7 @@ import { useAuth } from './contexts/AuthContext';
 
 // Public pages
 import { LandingPage } from './pages/LandingPage';
+import { CoverPage } from './pages/CoverPage';
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
 
@@ -29,7 +30,15 @@ function App() {
     <Routes>
       {/* Public routes */}
       <Route
+        path="/cover"
+        element={isAuthenticated ? <Navigate to="/" replace /> : <CoverPage />}
+      />
+      <Route
         path="/landing"
+        element={isAuthenticated ? <Navigate to="/" replace /> : <CoverPage />}
+      />
+      <Route
+        path="/landing-old"
         element={isAuthenticated ? <Navigate to="/" replace /> : <LandingPage />}
       />
       <Route

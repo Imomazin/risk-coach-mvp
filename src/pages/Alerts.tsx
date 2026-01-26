@@ -163,7 +163,6 @@ export function Alerts() {
   });
 
   const unreadCount = alerts.filter((a) => !(localReadState[a.id] ?? a.read)).length;
-  const criticalCount = alerts.filter((a) => a.severity === 'critical').length;
 
   const markAsRead = (id: string) => {
     setLocalReadState((prev) => ({ ...prev, [id]: true }));
@@ -190,18 +189,19 @@ export function Alerts() {
 
   // Calculate alert stats
   const alertStats = useMemo(() => {
+    const critical = alerts.filter((a) => a.severity === 'critical').length;
     const escalations = alerts.filter((a) => a.type === 'escalation').length;
     const breaches = alerts.filter((a) => a.type === 'breach').length;
     const concentrations = alerts.filter((a) => a.type === 'concentration').length;
     const appetiteAlerts = alerts.filter((a) => a.type === 'appetite').length;
 
     return {
-      critical: criticalCount,
+      critical,
       escalations: escalations,
       breaches: breaches + appetiteAlerts,
       warnings: concentrations + alerts.filter((a) => a.severity === 'warning').length,
     };
-  }, [alerts, criticalCount]);
+  }, [alerts]);
 
   return (
     <Layout title="Alerts" subtitle="Intelligent alerts from your risk intelligence system">
@@ -257,7 +257,7 @@ export function Alerts() {
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            Critical ({criticalCount})
+            Critical ({alertStats.critical})
           </button>
         </div>
 

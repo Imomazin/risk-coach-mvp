@@ -223,7 +223,7 @@ export function RiskIndicators() {
     await new Promise(resolve => setTimeout(resolve, 1200)); // UX delay
 
     // Load as KRI metrics into the unified store
-    loadFromAnalysis('kri_metrics', uploadedData.data, uploadedData.columns);
+    loadFromAnalysis('kri_metrics', uploadedData.data);
 
     setIsAnalyzing(false);
     setShowUpload(false);
@@ -292,7 +292,7 @@ export function RiskIndicators() {
         volatility,
         correlationScore: Math.min(100, Math.max(0, 50 + (breachSeverity * 0.5) + (kri.status === 'Red' ? 30 : kri.status === 'Amber' ? 15 : 0))),
         lastTriggeredEscalation,
-        daysInCurrentStatus: Math.floor(Math.random() * 30) + 1, // Simulated for demo
+        daysInCurrentStatus: ((typeof kri.id === 'number' ? kri.id : String(kri.id).length) % 30) + 1, // Deterministic based on id
       };
     });
   }, [kris, risks, isLoaded]);

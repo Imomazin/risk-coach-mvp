@@ -8,7 +8,7 @@
  * and all derived calculations are performed centrally.
  */
 
-import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
 
 // ============================================================================
 // CANONICAL DATA SCHEMA
@@ -211,15 +211,15 @@ interface RiskIntelligenceState {
 
 interface RiskIntelligenceContextType extends RiskIntelligenceState {
   // Data loading actions
-  loadRisks: (data: Record<string, unknown>[], columns: string[]) => void;
-  loadKRIs: (data: Record<string, unknown>[], columns: string[]) => void;
-  loadEvents: (data: Record<string, unknown>[], columns: string[]) => void;
-  loadControls: (data: Record<string, unknown>[], columns: string[]) => void;
-  loadScenarios: (data: Record<string, unknown>[], columns: string[]) => void;
-  loadAppetites: (data: Record<string, unknown>[], columns: string[]) => void;
+  loadRisks: (data: Record<string, unknown>[]) => void;
+  loadKRIs: (data: Record<string, unknown>[]) => void;
+  loadEvents: (data: Record<string, unknown>[]) => void;
+  loadControls: (data: Record<string, unknown>[]) => void;
+  loadScenarios: (data: Record<string, unknown>[]) => void;
+  loadAppetites: (data: Record<string, unknown>[]) => void;
 
   // Bulk load from analysis
-  loadFromAnalysis: (dataType: string, data: Record<string, unknown>[], columns: string[]) => void;
+  loadFromAnalysis: (dataType: string, data: Record<string, unknown>[]) => void;
 
   // Intelligence queries
   getRiskById: (id: string | number) => RiskRecord | undefined;
@@ -374,8 +374,7 @@ function calculateConcentrations(
 
 function determineEscalation(
   risk: Partial<RiskRecord>,
-  kris: KRIRecord[],
-  _appetites: RiskAppetite[]
+  kris: KRIRecord[]
 ): { isEscalated: boolean; reasons: string[] } {
   const reasons: string[] = [];
 
@@ -486,9 +485,7 @@ function generateExecutiveInsights(
   risks: RiskRecord[],
   kris: KRIRecord[],
   events: RiskEventRecord[],
-  _controls: ControlRecord[],
-  concentrations: ConcentrationRisk[],
-  _systemic: SystemicIndicator
+  concentrations: ConcentrationRisk[]
 ): ExecutiveInsight[] {
   const insights: ExecutiveInsight[] = [];
 
@@ -728,13 +725,7 @@ export function RiskIntelligenceProvider({ children }: { children: React.ReactNo
     const systemic = calculateSystemicIndicator(risks, kris, allConcentrations);
 
     // Generate executive insights
-    const insights = generateExecutiveInsights(risks, kris, events, controls, categoryConcentrations, systemic);
-
-    // Generate alerts
-    const newAlerts = generateAlerts(risks, kris, allConcentrations, systemic, alerts);
-    if (newAlerts.length !== alerts.length) {
-      setAlerts(newAlerts);
-    }
+    const insights = generateExecutiveInsights(risks, kris, events, categoryConcentrations);
 
     // Calculate score stats
     const inherentScores = risks.map(r => r.inherentScore).filter(s => s > 0);
@@ -802,7 +793,7 @@ export function RiskIntelligenceProvider({ children }: { children: React.ReactNo
         contribution: c.percentage,
       })),
       executiveInsights: insights,
-      alerts: newAlerts,
+      alerts,
 
       byCategory,
       byStatus,
@@ -820,6 +811,30 @@ export function RiskIntelligenceProvider({ children }: { children: React.ReactNo
         : 0,
     };
   }, [risks, kris, events, controls, scenarios, alerts]);
+
+  // Generate alerts when data changes using functional update
+  // This is intentional: alerts are derived from data but also have mutable properties (acknowledged)
+  // The functional update pattern ensures we preserve acknowledged state while computing new alerts
+  useEffect(() => {
+    if (risks.length === 0 && kris.length === 0) return;
+
+    const regionConcentrations = calculateConcentrations(risks, 'region');
+    const ownerConcentrations = calculateConcentrations(risks, 'owner');
+    const categoryConcentrations = calculateConcentrations(risks, 'category');
+    const allConcentrations = [...regionConcentrations, ...ownerConcentrations, ...categoryConcentrations];
+    const systemic = calculateSystemicIndicator(risks, kris, allConcentrations);
+
+    // Use functional update to avoid alerts in dependency array
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setAlerts(prevAlerts => {
+      const newAlerts = generateAlerts(risks, kris, allConcentrations, systemic, prevAlerts);
+      // Only update if alerts changed to avoid unnecessary re-renders
+      if (newAlerts.length !== prevAlerts.length) {
+        return newAlerts;
+      }
+      return prevAlerts;
+    });
+  }, [risks, kris]);
 
   // Validation
   const { validationErrors, isConsistent } = useMemo(() => {
@@ -844,7 +859,7 @@ export function RiskIntelligenceProvider({ children }: { children: React.ReactNo
   }, [risks, kris, events]);
 
   // Data loading functions
-  const loadRisks = useCallback((data: Record<string, unknown>[], _columns: string[]) => {
+  const loadRisks = useCallback((data: Record<string, unknown>[]) => {
     const normalized = data.map((row, idx) => {
       const risk: Partial<RiskRecord> = {
         id: findColumnValue(row, ['risk id', 'id', 'risk_id']) as string | number || idx + 1,
@@ -869,7 +884,7 @@ export function RiskIntelligenceProvider({ children }: { children: React.ReactNo
       };
 
       // Determine escalation
-      const escalation = determineEscalation(risk, kris, appetites);
+      const escalation = determineEscalation(risk, kris);
       risk.isEscalated = escalation.isEscalated;
       risk.escalationReasons = escalation.reasons;
 
@@ -879,9 +894,9 @@ export function RiskIntelligenceProvider({ children }: { children: React.ReactNo
     setRisks(normalized);
     setLastUpdated(new Date());
     setDataSource('Risk Register');
-  }, [kris, appetites]);
+  }, [kris]);
 
-  const loadKRIs = useCallback((data: Record<string, unknown>[], _columns: string[]) => {
+  const loadKRIs = useCallback((data: Record<string, unknown>[]) => {
     const normalized = data.map((row, idx) => {
       const currentValue = parseNumber(findColumnValue(row, ['current value', 'value', 'actual']));
       const threshold = parseNumber(findColumnValue(row, ['threshold', 'limit', 'target']));
@@ -905,7 +920,7 @@ export function RiskIntelligenceProvider({ children }: { children: React.ReactNo
     if (risks.length > 0) {
       setRisks(prev => prev.map(risk => {
         const linkedKRIs = normalized.filter(k => String(k.riskId) === String(risk.id));
-        const escalation = determineEscalation(risk, normalized, appetites);
+        const escalation = determineEscalation(risk, normalized);
         return {
           ...risk,
           linkedKRIs: linkedKRIs.map(k => String(k.id)),
@@ -917,9 +932,9 @@ export function RiskIntelligenceProvider({ children }: { children: React.ReactNo
         };
       }));
     }
-  }, [risks, appetites]);
+  }, [risks]);
 
-  const loadEvents = useCallback((data: Record<string, unknown>[], _columns: string[]) => {
+  const loadEvents = useCallback((data: Record<string, unknown>[]) => {
     const normalized = data.map((row, idx) => ({
       id: findColumnValue(row, ['event id', 'id', 'event_id']) as string | number || idx + 101,
       relatedRiskId: findColumnValue(row, ['related risk', 'risk id', 'risk_id']) as string | number || 0,
@@ -945,7 +960,7 @@ export function RiskIntelligenceProvider({ children }: { children: React.ReactNo
     }
   }, [risks]);
 
-  const loadControls = useCallback((data: Record<string, unknown>[], _columns: string[]) => {
+  const loadControls = useCallback((data: Record<string, unknown>[]) => {
     const normalized = data.map((row, idx) => {
       const mappedRisksStr = parseString(findColumnValue(row, ['mapped risk', 'risk ids', 'linked risk', 'associated']));
       const mappedRiskIds = mappedRisksStr.split(/[,;]/).map(s => s.trim()).filter(Boolean);
@@ -976,7 +991,7 @@ export function RiskIntelligenceProvider({ children }: { children: React.ReactNo
     }
   }, [risks]);
 
-  const loadScenarios = useCallback((data: Record<string, unknown>[], _columns: string[]) => {
+  const loadScenarios = useCallback((data: Record<string, unknown>[]) => {
     const normalized = data.map((row, idx) => {
       const triggeredStr = parseString(findColumnValue(row, ['triggered risks', 'risks', 'affected']));
       const triggeredRiskIds = triggeredStr.split(/[,;]/).map(s => s.trim()).filter(Boolean);
@@ -997,7 +1012,7 @@ export function RiskIntelligenceProvider({ children }: { children: React.ReactNo
     setLastUpdated(new Date());
   }, []);
 
-  const loadAppetites = useCallback((data: Record<string, unknown>[], _columns: string[]) => {
+  const loadAppetites = useCallback((data: Record<string, unknown>[]) => {
     const normalized = data.map(row => ({
       category: parseString(findColumnValue(row, ['category', 'risk category'])),
       level: normalizeEffectiveness(findColumnValue(row, ['appetite level', 'level', 'appetite'])) as RiskAppetite['level'],
@@ -1009,25 +1024,25 @@ export function RiskIntelligenceProvider({ children }: { children: React.ReactNo
     setLastUpdated(new Date());
   }, []);
 
-  const loadFromAnalysis = useCallback((dataType: string, data: Record<string, unknown>[], columns: string[]) => {
+  const loadFromAnalysis = useCallback((dataType: string, data: Record<string, unknown>[]) => {
     switch (dataType) {
       case 'risk_register':
-        loadRisks(data, columns);
+        loadRisks(data);
         break;
       case 'kri_metrics':
-        loadKRIs(data, columns);
+        loadKRIs(data);
         break;
       case 'risk_events':
-        loadEvents(data, columns);
+        loadEvents(data);
         break;
       case 'controls':
-        loadControls(data, columns);
+        loadControls(data);
         break;
       case 'stress_scenarios':
-        loadScenarios(data, columns);
+        loadScenarios(data);
         break;
       case 'risk_appetite':
-        loadAppetites(data, columns);
+        loadAppetites(data);
         break;
     }
   }, [loadRisks, loadKRIs, loadEvents, loadControls, loadScenarios, loadAppetites]);

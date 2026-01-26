@@ -377,7 +377,7 @@ export function DataAnalysis() {
     // LOAD DATA INTO THE UNIFIED RISK INTELLIGENCE STORE
     // This enables cross-pillar propagation to all other modules
     if (selectedFile.ermDataType && selectedFile.ermDataType !== 'generic') {
-      loadFromAnalysis(selectedFile.ermDataType, selectedFile.data, selectedFile.columnNames);
+      loadFromAnalysis(selectedFile.ermDataType, selectedFile.data);
     }
 
     // Update file with analysis result

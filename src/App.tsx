@@ -1,175 +1,34 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { ProtectedRoute } from './components/ProtectedRoute';
-import { useAuth } from './contexts/AuthContext';
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
-// Public pages
-import { LandingPage } from './pages/LandingPage';
-import { CoverPage } from './pages/CoverPage';
-import { Login } from './pages/Login';
-import { Signup } from './pages/Signup';
-
-// Protected pages
-import { Dashboard } from './pages/Dashboard';
-import { RiskRegister } from './pages/RiskRegister';
-import { Alerts } from './pages/Alerts';
-import { Analytics } from './pages/Analytics';
-import { Reports } from './pages/Reports';
-import { AICoach } from './pages/AICoach';
-import { RiskFrameworks } from './pages/RiskFrameworks';
-import { Team } from './pages/Team';
-import { Settings } from './pages/Settings';
-import { Admin } from './pages/Admin';
-import { DataAnalysis } from './pages/DataAnalysis';
-import { APIGateway } from './pages/APIGateway';
-import { RiskIndicators } from './pages/RiskIndicators';
+import CoverPage from "./pages/CoverPage";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
-  const { isAuthenticated } = useAuth();
-
   return (
-    <Routes>
-      {/* Public routes */}
-      <Route
-        path="/cover"
-        element={isAuthenticated ? <Navigate to="/" replace /> : <CoverPage />}
-      />
-      <Route
-        path="/landing"
-        element={isAuthenticated ? <Navigate to="/" replace /> : <CoverPage />}
-      />
-      <Route
-        path="/landing-old"
-        element={isAuthenticated ? <Navigate to="/" replace /> : <LandingPage />}
-      />
-      <Route
-        path="/login"
-        element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
-      />
-      <Route
-        path="/signup"
-        element={isAuthenticated ? <Navigate to="/" replace /> : <Signup />}
-      />
+    <Router>
+      <Routes>
 
-      {/* Protected routes */}
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/risks"
-        element={
-          <ProtectedRoute>
-            <RiskRegister />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/alerts"
-        element={
-          <ProtectedRoute>
-            <Alerts />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/analytics"
-        element={
-          <ProtectedRoute>
-            <Analytics />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/reports"
-        element={
-          <ProtectedRoute>
-            <Reports />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/ai-coach"
-        element={
-          <ProtectedRoute>
-            <AICoach />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/frameworks"
-        element={
-          <ProtectedRoute>
-            <RiskFrameworks />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/team"
-        element={
-          <ProtectedRoute>
-            <Team />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/settings"
-        element={
-          <ProtectedRoute>
-            <Settings />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/help"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute>
-            <Admin />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/data-analysis"
-        element={
-          <ProtectedRoute>
-            <DataAnalysis />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/api-gateway"
-        element={
-          <ProtectedRoute>
-            <APIGateway />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/risk-indicators"
-        element={
-          <ProtectedRoute>
-            <RiskIndicators />
-          </ProtectedRoute>
-        }
-      />
+        {/* PUBLIC ROUTES */}
+        <Route path="/" element={<CoverPage />} />
+        <Route path="/login" element={<Login />} />
 
-      {/* Catch-all: redirect to landing if not authenticated, dashboard if authenticated */}
-      <Route
-        path="*"
-        element={<Navigate to={isAuthenticated ? "/" : "/landing"} replace />}
-      />
-    </Routes>
+        {/* PROTECTED ROUTES */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* FALLBACK */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+
+      </Routes>
+    </Router>
   );
 }
 

@@ -9,17 +9,11 @@ import {
   CheckCircle2,
   Info,
   AlertCircle,
-  BarChart3,
-  PieChart,
-  TrendingUp,
   Shield,
   Target,
   DollarSign,
   Activity,
-  Users,
-  MapPin,
   Gauge,
-  LineChart,
 } from 'lucide-react';
 
 import type { ERMAnalysisResult, AnalysisInsight } from '../../types/riskData';

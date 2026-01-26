@@ -2,13 +2,13 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { useAuth } from './contexts/AuthContext';
 
-// Public pages
+// Public pages - explicit imports, no lazy loading
 import { LandingPage } from './pages/LandingPage';
 import { CoverPage } from './pages/CoverPage';
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
 
-// Protected pages
+// Protected pages - explicit imports
 import { Dashboard } from './pages/Dashboard';
 import { RiskRegister } from './pages/RiskRegister';
 import { Alerts } from './pages/Alerts';
@@ -24,41 +24,71 @@ import { APIGateway } from './pages/APIGateway';
 import { RiskIndicators } from './pages/RiskIndicators';
 
 function App() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  // CRITICAL: Always render routes, never return null or blank
+  // The routes themselves handle auth state, not App component
 
   return (
     <Routes>
-      {/* Public routes */}
+      {/* ROOT PATH - Explicit handling, no blank screen possible */}
+      <Route
+        path="/"
+        element={
+          isLoading ? (
+            // Show cover page during auth check - never blank
+            <CoverPage />
+          ) : isAuthenticated ? (
+            <Navigate to="/dashboard" replace />
+          ) : (
+            <CoverPage />
+          )
+        }
+      />
+
+      {/* LOGIN - Explicit route, always renders */}
+      <Route
+        path="/login"
+        element={
+          isLoading ? (
+            <Login />
+          ) : isAuthenticated ? (
+            <Navigate to="/dashboard" replace />
+          ) : (
+            <Login />
+          )
+        }
+      />
+
+      {/* Other public routes */}
       <Route
         path="/cover"
-        element={isAuthenticated ? <Navigate to="/" replace /> : <CoverPage />}
+        element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <CoverPage />}
       />
       <Route
         path="/landing"
-        element={isAuthenticated ? <Navigate to="/" replace /> : <CoverPage />}
+        element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <CoverPage />}
       />
       <Route
         path="/landing-old"
-        element={isAuthenticated ? <Navigate to="/" replace /> : <LandingPage />}
-      />
-      <Route
-        path="/login"
-        element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
+        element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LandingPage />}
       />
       <Route
         path="/signup"
-        element={isAuthenticated ? <Navigate to="/" replace /> : <Signup />}
+        element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Signup />}
       />
 
-      {/* Protected routes */}
+      {/* DASHBOARD - Protected route for authenticated users */}
       <Route
-        path="/"
+        path="/dashboard"
         element={
           <ProtectedRoute>
             <Dashboard />
           </ProtectedRoute>
         }
       />
+
+      {/* Other protected routes */}
       <Route
         path="/risks"
         element={
@@ -164,11 +194,8 @@ function App() {
         }
       />
 
-      {/* Catch-all: redirect to landing if not authenticated, dashboard if authenticated */}
-      <Route
-        path="*"
-        element={<Navigate to={isAuthenticated ? "/" : "/landing"} replace />}
-      />
+      {/* CATCH-ALL - Always redirect to /login, never undefined */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }

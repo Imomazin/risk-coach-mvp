@@ -58,14 +58,15 @@ function MonteCarloSimulation() {
         let value: number;
 
         switch (distribution) {
-          case 'normal':
+          case 'normal': {
             // Box-Muller transform for normal distribution
             const u1 = Math.random();
             const u2 = Math.random();
             const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
             value = mostLikely + z * stdDev;
             break;
-          case 'triangular':
+          }
+          case 'triangular': {
             // Triangular distribution
             const u = Math.random();
             const f = (mostLikely - minValue) / (maxValue - minValue);
@@ -75,10 +76,11 @@ function MonteCarloSimulation() {
               value = maxValue - Math.sqrt((1 - u) * (maxValue - minValue) * (maxValue - mostLikely));
             }
             break;
+          }
           case 'uniform':
             value = minValue + Math.random() * (maxValue - minValue);
             break;
-          case 'lognormal':
+          case 'lognormal': {
             const u3 = Math.random();
             const u4 = Math.random();
             const z2 = Math.sqrt(-2 * Math.log(u3)) * Math.cos(2 * Math.PI * u4);
@@ -86,6 +88,7 @@ function MonteCarloSimulation() {
             const logStd = stdDev / mostLikely;
             value = Math.exp(logMean + z2 * logStd);
             break;
+          }
           default:
             value = mostLikely;
         }

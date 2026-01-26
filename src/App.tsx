@@ -4,6 +4,7 @@ import { useAuth } from './contexts/AuthContext';
 
 // Public pages
 import { LandingPage } from './pages/LandingPage';
+import { CoverPage } from './pages/CoverPage';
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
 
@@ -20,6 +21,7 @@ import { Settings } from './pages/Settings';
 import { Admin } from './pages/Admin';
 import { DataAnalysis } from './pages/DataAnalysis';
 import { APIGateway } from './pages/APIGateway';
+import { RiskIndicators } from './pages/RiskIndicators';
 
 function App() {
   const { isAuthenticated } = useAuth();
@@ -28,7 +30,15 @@ function App() {
     <Routes>
       {/* Public routes */}
       <Route
+        path="/cover"
+        element={isAuthenticated ? <Navigate to="/" replace /> : <CoverPage />}
+      />
+      <Route
         path="/landing"
+        element={isAuthenticated ? <Navigate to="/" replace /> : <CoverPage />}
+      />
+      <Route
+        path="/landing-old"
         element={isAuthenticated ? <Navigate to="/" replace /> : <LandingPage />}
       />
       <Route
@@ -142,6 +152,14 @@ function App() {
         element={
           <ProtectedRoute>
             <APIGateway />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/risk-indicators"
+        element={
+          <ProtectedRoute>
+            <RiskIndicators />
           </ProtectedRoute>
         }
       />

@@ -1,21 +1,26 @@
 import { useState, useCallback, useRef } from 'react';
+import * as XLSX from 'xlsx';
 import { Layout } from '../components/layout/Layout';
+import { ERMAnalysisPanel } from '../components/analysis/ERMAnalysisPanel';
+import { analyzeERMData, detectDataType } from '../utils/riskDataAnalyzer';
+import { useRiskIntelligence } from '../stores/RiskIntelligenceStore';
+import type { ERMAnalysisResult, ERMDataType } from '../types/riskData';
 import {
   Upload,
   FileSpreadsheet,
   FileText,
   Trash2,
   RefreshCw,
-  BarChart3,
-  PieChart,
-  TrendingUp,
-  AlertTriangle,
-  CheckCircle2,
   Table,
   Calculator,
   Sparkles,
   Search,
   ArrowUpDown,
+  Database,
+  CheckCircle2,
+  Layers,
+  Download,
+  FileJson,
 } from 'lucide-react';
 
 interface DataColumn {
@@ -40,16 +45,11 @@ interface UploadedFile {
   uploadedAt: Date;
   rows: number;
   columns: DataColumn[];
+  columnNames: string[];
   data: Record<string, unknown>[];
   analyzed: boolean;
-}
-
-interface AnalysisResult {
-  type: 'risk_distribution' | 'trend' | 'anomaly' | 'correlation';
-  title: string;
-  description: string;
-  data: unknown;
-  severity?: 'low' | 'medium' | 'high';
+  ermDataType?: ERMDataType;
+  analysisResult?: ERMAnalysisResult;
 }
 
 // Parse CSV string to array of objects
@@ -57,11 +57,14 @@ function parseCSV(csvText: string): { data: Record<string, unknown>[]; columns: 
   const lines = csvText.trim().split('\n');
   if (lines.length < 2) return { data: [], columns: [] };
 
-  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  // Handle both comma and tab-separated values
+  const delimiter = lines[0].includes('\t') ? '\t' : ',';
+  const headers = lines[0].split(delimiter).map(h => h.trim().replace(/^"|"$/g, ''));
   const data: Record<string, unknown>[] = [];
 
   for (let i = 1; i < lines.length; i++) {
-    const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+    // Better CSV parsing that handles quoted values
+    const values = parseCSVLine(lines[i], delimiter);
     const row: Record<string, unknown> = {};
     headers.forEach((header, idx) => {
       const value = values[idx] || '';
@@ -73,6 +76,27 @@ function parseCSV(csvText: string): { data: Record<string, unknown>[]; columns: 
   }
 
   return { data, columns: headers };
+}
+
+// Parse a single CSV line handling quoted values
+function parseCSVLine(line: string, delimiter: string): string[] {
+  const values: string[] = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === delimiter && !inQuotes) {
+      values.push(current.trim().replace(/^"|"$/g, ''));
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  values.push(current.trim().replace(/^"|"$/g, ''));
+  return values;
 }
 
 // Analyze column data
@@ -88,11 +112,14 @@ function analyzeColumn(data: Record<string, unknown>[], columnName: string): Dat
   if (nonNullValues.length > 0) {
     const allNumbers = nonNullValues.every(v => typeof v === 'number' || !isNaN(Number(v)));
     const allBooleans = nonNullValues.every(v => typeof v === 'boolean' || v === 'true' || v === 'false');
-    const allDates = nonNullValues.every(v => !isNaN(Date.parse(String(v))));
+    const allDates = nonNullValues.every(v => {
+      const dateStr = String(v);
+      return !isNaN(Date.parse(dateStr)) && dateStr.match(/^\d{4}[-/]\d{2}[-/]\d{2}/);
+    });
 
     if (allBooleans) type = 'boolean';
     else if (allNumbers) type = 'number';
-    else if (allDates && uniqueValues.size > 10) type = 'date';
+    else if (allDates && uniqueValues.size > 5) type = 'date';
   }
 
   const column: DataColumn = {
@@ -105,102 +132,75 @@ function analyzeColumn(data: Record<string, unknown>[], columnName: string): Dat
   // Calculate stats for numeric columns
   if (type === 'number') {
     const numbers = nonNullValues.map(v => Number(v));
-    const sorted = [...numbers].sort((a, b) => a - b);
-    const sum = numbers.reduce((a, b) => a + b, 0);
-    const mean = sum / numbers.length;
-    const variance = numbers.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / numbers.length;
+    if (numbers.length > 0) {
+      const sorted = [...numbers].sort((a, b) => a - b);
+      const sum = numbers.reduce((a, b) => a + b, 0);
+      const mean = sum / numbers.length;
+      const variance = numbers.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / numbers.length;
 
-    column.stats = {
-      min: Math.min(...numbers),
-      max: Math.max(...numbers),
-      mean,
-      median: sorted[Math.floor(sorted.length / 2)],
-      stdDev: Math.sqrt(variance),
-    };
+      column.stats = {
+        min: Math.min(...numbers),
+        max: Math.max(...numbers),
+        mean,
+        median: sorted[Math.floor(sorted.length / 2)],
+        stdDev: Math.sqrt(variance),
+      };
+    }
   }
 
   return column;
 }
 
-// Generate AI analysis insights
-function generateInsights(file: UploadedFile): AnalysisResult[] {
-  const insights: AnalysisResult[] = [];
-
-  // Find numeric columns for analysis
-  const numericCols = file.columns.filter(c => c.type === 'number');
-
-  // Risk Distribution Analysis
-  if (numericCols.length > 0) {
-    const riskCol = numericCols.find(c =>
-      c.name.toLowerCase().includes('risk') ||
-      c.name.toLowerCase().includes('score') ||
-      c.name.toLowerCase().includes('impact')
-    ) || numericCols[0];
-
-    if (riskCol.stats) {
-      const highRiskThreshold = (riskCol.stats.mean || 0) + (riskCol.stats.stdDev || 0);
-      const highRiskCount = file.data.filter(row => Number(row[riskCol.name]) > highRiskThreshold).length;
-      const highRiskPercentage = (highRiskCount / file.data.length) * 100;
-
-      insights.push({
-        type: 'risk_distribution',
-        title: 'Risk Distribution Analysis',
-        description: `${highRiskPercentage.toFixed(1)}% of records (${highRiskCount} items) exceed the high-risk threshold based on ${riskCol.name}. Mean: ${riskCol.stats.mean?.toFixed(2)}, Std Dev: ${riskCol.stats.stdDev?.toFixed(2)}.`,
-        data: {
-          column: riskCol.name,
-          highRiskCount,
-          totalCount: file.data.length,
-          threshold: highRiskThreshold,
-        },
-        severity: highRiskPercentage > 25 ? 'high' : highRiskPercentage > 10 ? 'medium' : 'low',
-      });
-    }
-  }
-
-  // Data Quality Analysis
-  const qualityIssues = file.columns.filter(c => c.nullCount > file.data.length * 0.1);
-  if (qualityIssues.length > 0) {
-    insights.push({
-      type: 'anomaly',
-      title: 'Data Quality Alert',
-      description: `${qualityIssues.length} column(s) have more than 10% missing values: ${qualityIssues.map(c => c.name).join(', ')}. This may affect analysis accuracy.`,
-      data: { columns: qualityIssues.map(c => ({ name: c.name, nullPercentage: (c.nullCount / file.data.length * 100).toFixed(1) })) },
-      severity: 'medium',
-    });
-  }
-
-  // Trend Analysis (if date column exists)
-  const dateCol = file.columns.find(c => c.type === 'date');
-  if (dateCol && numericCols.length > 0) {
-    insights.push({
-      type: 'trend',
-      title: 'Temporal Trend Detected',
-      description: `Time-series data detected in column "${dateCol.name}". Consider running trend analysis to identify patterns over time.`,
-      data: { dateColumn: dateCol.name, valueColumns: numericCols.map(c => c.name) },
-      severity: 'low',
-    });
-  }
-
-  // Correlation hints
-  if (numericCols.length >= 2) {
-    insights.push({
-      type: 'correlation',
-      title: 'Correlation Analysis Available',
-      description: `${numericCols.length} numeric columns found. Correlation analysis can reveal relationships between variables like ${numericCols.slice(0, 3).map(c => c.name).join(', ')}.`,
-      data: { columns: numericCols.map(c => c.name) },
-      severity: 'low',
-    });
-  }
-
-  return insights;
+// Get data type display info
+function getDataTypeInfo(type: ERMDataType): { label: string; color: string; description: string } {
+  const info: Record<ERMDataType, { label: string; color: string; description: string }> = {
+    risk_register: {
+      label: 'Risk Register',
+      color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600',
+      description: 'Enterprise risk inventory with scores and controls',
+    },
+    risk_events: {
+      label: 'Risk Events',
+      color: 'bg-red-100 dark:bg-red-900/30 text-red-600',
+      description: 'Historical risk incidents and financial impacts',
+    },
+    kri_metrics: {
+      label: 'KRI Metrics',
+      color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600',
+      description: 'Key Risk Indicators with thresholds and trends',
+    },
+    controls: {
+      label: 'Controls',
+      color: 'bg-green-100 dark:bg-green-900/30 text-green-600',
+      description: 'Control inventory and risk mappings',
+    },
+    risk_appetite: {
+      label: 'Risk Appetite',
+      color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600',
+      description: 'Risk tolerance levels and board guidance',
+    },
+    stress_scenarios: {
+      label: 'Stress Scenarios',
+      color: 'bg-orange-100 dark:bg-orange-900/30 text-orange-600',
+      description: 'Stress testing scenarios and loss estimates',
+    },
+    generic: {
+      label: 'Generic Data',
+      color: 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300',
+      description: 'General tabular data',
+    },
+  };
+  return info[type];
 }
 
 export function DataAnalysis() {
+  // Access the unified risk intelligence store
+  const { loadFromAnalysis } = useRiskIntelligence();
+
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [selectedFile, setSelectedFile] = useState<UploadedFile | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisResults, setAnalysisResults] = useState<AnalysisResult[]>([]);
   const [activeTab, setActiveTab] = useState<'data' | 'stats' | 'insights'>('data');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortColumn, setSortColumn] = useState<string | null>(null);
@@ -218,18 +218,71 @@ export function DataAnalysis() {
   }, []);
 
   const processFile = useCallback(async (file: File) => {
-    const reader = new FileReader();
+    let fileType: 'csv' | 'excel' | 'json' = 'csv';
 
+    if (file.name.endsWith('.json')) {
+      fileType = 'json';
+    } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+      fileType = 'excel';
+    }
+
+    // Handle Excel files with ArrayBuffer
+    if (fileType === 'excel') {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target?.result as ArrayBuffer);
+          const workbook = XLSX.read(data, { type: 'array' });
+
+          // Process all sheets and combine them
+          const allSheetData: { sheetName: string; data: Record<string, unknown>[]; columns: string[] }[] = [];
+
+          workbook.SheetNames.forEach((sheetName) => {
+            const worksheet = workbook.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, { defval: '' });
+
+            if (jsonData.length > 0) {
+              const columns = Object.keys(jsonData[0]);
+              allSheetData.push({ sheetName, data: jsonData, columns });
+            }
+          });
+
+          // Create a file for each sheet with data
+          allSheetData.forEach((sheet, index) => {
+            const columns = sheet.columns.map(name => analyzeColumn(sheet.data, name));
+            const ermDataType = detectDataType(sheet.columns);
+
+            const uploadedFile: UploadedFile = {
+              id: `${Date.now()}-${index}`,
+              name: allSheetData.length > 1 ? `${file.name} - ${sheet.sheetName}` : file.name,
+              size: file.size,
+              type: fileType,
+              uploadedAt: new Date(),
+              rows: sheet.data.length,
+              columns,
+              columnNames: sheet.columns,
+              data: sheet.data,
+              analyzed: false,
+              ermDataType,
+            };
+
+            setFiles(prev => [...prev, uploadedFile]);
+            if (index === 0) {
+              setSelectedFile(uploadedFile);
+            }
+          });
+        } catch (error) {
+          console.error('Error parsing Excel file:', error);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+      return;
+    }
+
+    // Handle CSV and JSON files with text
+    const reader = new FileReader();
     reader.onload = (e) => {
       const content = e.target?.result as string;
-      let fileType: 'csv' | 'excel' | 'json' = 'csv';
-
-      if (file.name.endsWith('.json')) {
-        fileType = 'json';
-      } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
-        fileType = 'excel';
-      }
-
       let parsedData: Record<string, unknown>[] = [];
       let columnNames: string[] = [];
 
@@ -253,6 +306,9 @@ export function DataAnalysis() {
       // Analyze columns
       const columns = columnNames.map(name => analyzeColumn(parsedData, name));
 
+      // Detect ERM data type
+      const ermDataType = detectDataType(columnNames);
+
       const uploadedFile: UploadedFile = {
         id: Date.now().toString(),
         name: file.name,
@@ -261,8 +317,10 @@ export function DataAnalysis() {
         uploadedAt: new Date(),
         rows: parsedData.length,
         columns,
+        columnNames,
         data: parsedData,
         analyzed: false,
+        ermDataType,
       };
 
       setFiles(prev => [...prev, uploadedFile]);
@@ -278,7 +336,7 @@ export function DataAnalysis() {
 
     const droppedFiles = Array.from(e.dataTransfer.files);
     droppedFiles.forEach(file => {
-      if (file.name.endsWith('.csv') || file.name.endsWith('.json') || file.name.endsWith('.xlsx')) {
+      if (file.name.endsWith('.csv') || file.name.endsWith('.json') || file.name.endsWith('.xlsx') || file.name.endsWith('.tsv')) {
         processFile(file);
       }
     });
@@ -298,24 +356,45 @@ export function DataAnalysis() {
     setIsAnalyzing(true);
     setActiveTab('insights');
 
-    // Simulate AI analysis delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Simulate analysis delay for UX
+    await new Promise(resolve => setTimeout(resolve, 1500));
 
-    const insights = generateInsights(selectedFile);
-    setAnalysisResults(insights);
+    // Collect known risk IDs from risk register if available
+    const riskRegisterFile = files.find(f => f.ermDataType === 'risk_register');
+    let knownRiskIds: Set<string | number> | undefined;
+    if (riskRegisterFile) {
+      const riskIdCol = riskRegisterFile.columnNames.find(c =>
+        c.toLowerCase().includes('risk') && c.toLowerCase().includes('id')
+      );
+      if (riskIdCol) {
+        knownRiskIds = new Set(riskRegisterFile.data.map(row => row[riskIdCol] as string | number));
+      }
+    }
 
-    // Mark file as analyzed
-    setFiles(prev => prev.map(f => f.id === selectedFile.id ? { ...f, analyzed: true } : f));
-    setSelectedFile(prev => prev ? { ...prev, analyzed: true } : null);
+    // Run ERM analysis
+    const analysisResult = analyzeERMData(selectedFile.data, selectedFile.columnNames, knownRiskIds);
+
+    // LOAD DATA INTO THE UNIFIED RISK INTELLIGENCE STORE
+    // This enables cross-pillar propagation to all other modules
+    if (selectedFile.ermDataType && selectedFile.ermDataType !== 'generic') {
+      loadFromAnalysis(selectedFile.ermDataType, selectedFile.data);
+    }
+
+    // Update file with analysis result
+    const updatedFile = { ...selectedFile, analyzed: true, analysisResult };
+    setFiles(prev => prev.map(f => f.id === selectedFile.id ? updatedFile : f));
+    setSelectedFile(updatedFile);
 
     setIsAnalyzing(false);
   };
+
+  // NOTE: Data is loaded into the unified store directly in runAnalysis()
+  // No auto-reload effect needed - this prevents duplicate loading and potential loops
 
   const deleteFile = (fileId: string) => {
     setFiles(prev => prev.filter(f => f.id !== fileId));
     if (selectedFile?.id === fileId) {
       setSelectedFile(null);
-      setAnalysisResults([]);
     }
   };
 
@@ -326,6 +405,35 @@ export function DataAnalysis() {
       setSortColumn(column);
       setSortDirection('asc');
     }
+  };
+
+  // Export analysis results
+  const exportResults = () => {
+    if (!selectedFile?.analysisResult) return;
+
+    const exportData = {
+      fileName: selectedFile.name,
+      analyzedAt: new Date().toISOString(),
+      dataType: selectedFile.ermDataType,
+      recordCount: selectedFile.rows,
+      insights: selectedFile.analysisResult.insights,
+      ...(selectedFile.analysisResult.riskDistribution && { riskDistribution: selectedFile.analysisResult.riskDistribution }),
+      ...(selectedFile.analysisResult.riskScores && { riskScores: selectedFile.analysisResult.riskScores }),
+      ...(selectedFile.analysisResult.kriAnalysis && { kriAnalysis: selectedFile.analysisResult.kriAnalysis }),
+      ...(selectedFile.analysisResult.eventAnalysis && { eventAnalysis: selectedFile.analysisResult.eventAnalysis }),
+      ...(selectedFile.analysisResult.controlAnalysis && { controlAnalysis: selectedFile.analysisResult.controlAnalysis }),
+      ...(selectedFile.analysisResult.stressAnalysis && { stressAnalysis: selectedFile.analysisResult.stressAnalysis }),
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${selectedFile.name.replace(/\.[^/.]+$/, '')}_analysis.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   // Filter and sort data
@@ -343,7 +451,7 @@ export function DataAnalysis() {
       const comparison = String(aVal).localeCompare(String(bVal), undefined, { numeric: true });
       return sortDirection === 'asc' ? comparison : -comparison;
     })
-    .slice(0, 100) : []; // Limit to 100 rows for display
+    .slice(0, 100) : [];
 
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;
@@ -351,17 +459,25 @@ export function DataAnalysis() {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
+  // Summary stats across all files
+  const fileSummary = {
+    totalFiles: files.length,
+    analyzedFiles: files.filter(f => f.analyzed).length,
+    totalRecords: files.reduce((sum, f) => sum + f.rows, 0),
+    dataTypes: [...new Set(files.map(f => f.ermDataType).filter(Boolean))],
+  };
+
   return (
-    <Layout title="Data Analysis" subtitle="Upload and analyze risk data from CSV, Excel, or JSON files">
+    <Layout title="Data Analysis" subtitle="Upload and analyze enterprise risk management data">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-              Data Analysis
+              Risk Data Analysis
             </h1>
             <p className="text-slate-600 dark:text-slate-400">
-              Upload and analyze risk data from CSV, Excel, or JSON files
+              Upload risk registers, events, KRIs, controls, and stress scenarios for AI-powered analysis
             </p>
           </div>
           <div className="flex gap-3">
@@ -370,18 +486,68 @@ export function DataAnalysis() {
               className="flex items-center gap-2 px-4 py-2 bg-lumina-600 text-white rounded-xl hover:bg-lumina-700 transition-colors"
             >
               <Upload className="w-4 h-4" />
-              Upload File
+              Upload Data
             </button>
             <input
               ref={fileInputRef}
               type="file"
-              accept=".csv,.json,.xlsx,.xls"
+              accept=".csv,.json,.xlsx,.xls,.tsv"
               onChange={handleFileSelect}
               className="hidden"
               multiple
             />
           </div>
         </div>
+
+        {/* Summary Stats */}
+        {files.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                  <Layers className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Files Loaded</p>
+                  <p className="text-xl font-bold text-slate-900 dark:text-white">{fileSummary.totalFiles}</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                  <CheckCircle2 className="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Analyzed</p>
+                  <p className="text-xl font-bold text-slate-900 dark:text-white">{fileSummary.analyzedFiles}</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                  <Database className="w-5 h-5 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Total Records</p>
+                  <p className="text-xl font-bold text-slate-900 dark:text-white">{fileSummary.totalRecords.toLocaleString()}</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                  <FileSpreadsheet className="w-5 h-5 text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Data Types</p>
+                  <p className="text-xl font-bold text-slate-900 dark:text-white">{fileSummary.dataTypes.length}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* File List Sidebar */}
@@ -402,11 +568,30 @@ export function DataAnalysis() {
             >
               <Upload className={`w-8 h-8 mx-auto mb-2 ${isDragging ? 'text-lumina-500' : 'text-slate-400'}`} />
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                {isDragging ? 'Drop files here' : 'Drag & drop or click to upload'}
+                {isDragging ? 'Drop files here' : 'Drag & drop or click'}
               </p>
               <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                CSV, JSON, XLSX supported
+                CSV, JSON, TSV supported
               </p>
+            </div>
+
+            {/* Supported Data Types */}
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+              <div className="p-3 border-b border-slate-200 dark:border-slate-700">
+                <h3 className="font-medium text-slate-900 dark:text-white text-sm">Supported Data Types</h3>
+              </div>
+              <div className="p-2 space-y-1 text-xs">
+                {(['risk_register', 'risk_events', 'kri_metrics', 'controls', 'stress_scenarios'] as ERMDataType[]).map(type => {
+                  const info = getDataTypeInfo(type);
+                  return (
+                    <div key={type} className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${info.color}`}>
+                        {info.label}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Uploaded Files */}
@@ -420,46 +605,56 @@ export function DataAnalysis() {
                     No files uploaded yet
                   </div>
                 ) : (
-                  files.map(file => (
-                    <div
-                      key={file.id}
-                      onClick={() => setSelectedFile(file)}
-                      className={`
-                        p-3 flex items-center gap-3 cursor-pointer border-b border-slate-100 dark:border-slate-700 last:border-0
-                        ${selectedFile?.id === file.id
-                          ? 'bg-lumina-50 dark:bg-lumina-900/20'
-                          : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'
-                        }
-                      `}
-                    >
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                        file.type === 'csv' ? 'bg-green-100 dark:bg-green-900/30 text-green-600' :
-                        file.type === 'json' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600' :
-                        'bg-purple-100 dark:bg-purple-900/30 text-purple-600'
-                      }`}>
-                        {file.type === 'csv' ? <FileText className="w-4 h-4" /> :
-                         file.type === 'json' ? <FileText className="w-4 h-4" /> :
-                         <FileSpreadsheet className="w-4 h-4" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
-                          {file.name}
-                        </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                          {file.rows} rows • {formatFileSize(file.size)}
-                        </p>
-                      </div>
-                      {file.analyzed && (
-                        <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
-                      )}
-                      <button
-                        onClick={(e) => { e.stopPropagation(); deleteFile(file.id); }}
-                        className="p-1 text-slate-400 hover:text-red-500 rounded"
+                  files.map(file => {
+                    const typeInfo = file.ermDataType ? getDataTypeInfo(file.ermDataType) : null;
+                    return (
+                      <div
+                        key={file.id}
+                        onClick={() => setSelectedFile(file)}
+                        className={`
+                          p-3 flex items-center gap-3 cursor-pointer border-b border-slate-100 dark:border-slate-700 last:border-0
+                          ${selectedFile?.id === file.id
+                            ? 'bg-lumina-50 dark:bg-lumina-900/20'
+                            : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'
+                          }
+                        `}
                       >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                          file.type === 'csv' ? 'bg-green-100 dark:bg-green-900/30 text-green-600' :
+                          file.type === 'json' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600' :
+                          'bg-purple-100 dark:bg-purple-900/30 text-purple-600'
+                        }`}>
+                          {file.type === 'csv' ? <FileText className="w-4 h-4" /> :
+                           file.type === 'json' ? <FileJson className="w-4 h-4" /> :
+                           <FileSpreadsheet className="w-4 h-4" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
+                            {file.name}
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                              {file.rows} rows
+                            </p>
+                            {typeInfo && (
+                              <span className={`px-1.5 py-0.5 text-[10px] rounded-full ${typeInfo.color}`}>
+                                {typeInfo.label}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {file.analyzed && (
+                          <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+                        )}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); deleteFile(file.id); }}
+                          className="p-1 text-slate-400 hover:text-red-500 rounded"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    );
+                  })
                 )}
               </div>
             </div>
@@ -471,7 +666,7 @@ export function DataAnalysis() {
               <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
                 {/* File Header */}
                 <div className="p-4 border-b border-slate-200 dark:border-slate-700">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between flex-wrap gap-4">
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                         selectedFile.type === 'csv' ? 'bg-green-100 dark:bg-green-900/30 text-green-600' :
@@ -481,24 +676,42 @@ export function DataAnalysis() {
                         <FileSpreadsheet className="w-5 h-5" />
                       </div>
                       <div>
-                        <h2 className="font-semibold text-slate-900 dark:text-white">{selectedFile.name}</h2>
+                        <div className="flex items-center gap-2">
+                          <h2 className="font-semibold text-slate-900 dark:text-white">{selectedFile.name}</h2>
+                          {selectedFile.ermDataType && (
+                            <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${getDataTypeInfo(selectedFile.ermDataType).color}`}>
+                              {getDataTypeInfo(selectedFile.ermDataType).label}
+                            </span>
+                          )}
+                        </div>
                         <p className="text-sm text-slate-500 dark:text-slate-400">
-                          {selectedFile.rows.toLocaleString()} rows × {selectedFile.columns.length} columns
+                          {selectedFile.rows.toLocaleString()} rows × {selectedFile.columns.length} columns • {formatFileSize(selectedFile.size)}
                         </p>
                       </div>
                     </div>
-                    <button
-                      onClick={runAnalysis}
-                      disabled={isAnalyzing}
-                      className="flex items-center gap-2 px-4 py-2 bg-lumina-600 text-white rounded-lg hover:bg-lumina-700 transition-colors disabled:opacity-60"
-                    >
-                      {isAnalyzing ? (
-                        <RefreshCw className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Sparkles className="w-4 h-4" />
+                    <div className="flex gap-2">
+                      {selectedFile.analyzed && selectedFile.analysisResult && (
+                        <button
+                          onClick={exportResults}
+                          className="flex items-center gap-2 px-3 py-2 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                        >
+                          <Download className="w-4 h-4" />
+                          Export
+                        </button>
                       )}
-                      {isAnalyzing ? 'Analyzing...' : 'Run AI Analysis'}
-                    </button>
+                      <button
+                        onClick={runAnalysis}
+                        disabled={isAnalyzing}
+                        className="flex items-center gap-2 px-4 py-2 bg-lumina-600 text-white rounded-lg hover:bg-lumina-700 transition-colors disabled:opacity-60"
+                      >
+                        {isAnalyzing ? (
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Sparkles className="w-4 h-4" />
+                        )}
+                        {isAnalyzing ? 'Analyzing...' : selectedFile.analyzed ? 'Re-analyze' : 'Run Analysis'}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -521,9 +734,9 @@ export function DataAnalysis() {
                         {tab === 'stats' && <Calculator className="w-4 h-4" />}
                         {tab === 'insights' && <Sparkles className="w-4 h-4" />}
                         {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                        {tab === 'insights' && analysisResults.length > 0 && (
+                        {tab === 'insights' && selectedFile.analysisResult && (
                           <span className="px-1.5 py-0.5 text-xs rounded-full bg-lumina-100 dark:bg-lumina-900/30 text-lumina-600">
-                            {analysisResults.length}
+                            {selectedFile.analysisResult.insights.length}
                           </span>
                         )}
                       </div>
@@ -573,7 +786,7 @@ export function DataAnalysis() {
                             {displayData.map((row, idx) => (
                               <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-900/50">
                                 {selectedFile.columns.map((col) => (
-                                  <td key={col.name} className="px-4 py-2 text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                                  <td key={col.name} className="px-4 py-2 text-slate-600 dark:text-slate-300 whitespace-nowrap max-w-xs truncate">
                                     {String(row[col.name] ?? '—')}
                                   </td>
                                 ))}
@@ -598,7 +811,7 @@ export function DataAnalysis() {
                           className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700"
                         >
                           <div className="flex items-center justify-between mb-3">
-                            <h4 className="font-medium text-slate-900 dark:text-white">{col.name}</h4>
+                            <h4 className="font-medium text-slate-900 dark:text-white truncate" title={col.name}>{col.name}</h4>
                             <span className={`px-2 py-0.5 text-xs rounded-full ${
                               col.type === 'number' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600' :
                               col.type === 'date' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600' :
@@ -623,19 +836,19 @@ export function DataAnalysis() {
                               <>
                                 <div className="flex justify-between text-slate-600 dark:text-slate-400">
                                   <span>Min:</span>
-                                  <span className="font-medium text-slate-900 dark:text-white">{col.stats.min?.toFixed(2)}</span>
+                                  <span className="font-medium text-slate-900 dark:text-white">{col.stats.min?.toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between text-slate-600 dark:text-slate-400">
                                   <span>Max:</span>
-                                  <span className="font-medium text-slate-900 dark:text-white">{col.stats.max?.toFixed(2)}</span>
+                                  <span className="font-medium text-slate-900 dark:text-white">{col.stats.max?.toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between text-slate-600 dark:text-slate-400">
                                   <span>Mean:</span>
-                                  <span className="font-medium text-slate-900 dark:text-white">{col.stats.mean?.toFixed(2)}</span>
+                                  <span className="font-medium text-slate-900 dark:text-white">{col.stats.mean?.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
                                 </div>
                                 <div className="flex justify-between text-slate-600 dark:text-slate-400">
                                   <span>Std Dev:</span>
-                                  <span className="font-medium text-slate-900 dark:text-white">{col.stats.stdDev?.toFixed(2)}</span>
+                                  <span className="font-medium text-slate-900 dark:text-white">{col.stats.stdDev?.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
                                 </div>
                               </>
                             )}
@@ -652,54 +865,13 @@ export function DataAnalysis() {
                           <div className="w-16 h-16 rounded-full bg-lumina-100 dark:bg-lumina-900/30 flex items-center justify-center mb-4">
                             <RefreshCw className="w-8 h-8 text-lumina-600 animate-spin" />
                           </div>
-                          <p className="text-slate-600 dark:text-slate-400">Analyzing your data with AI...</p>
-                          <p className="text-sm text-slate-500 dark:text-slate-500 mt-1">This may take a moment</p>
+                          <p className="text-slate-600 dark:text-slate-400">Analyzing your risk data...</p>
+                          <p className="text-sm text-slate-500 dark:text-slate-500 mt-1">
+                            Detecting patterns and generating insights
+                          </p>
                         </div>
-                      ) : analysisResults.length > 0 ? (
-                        analysisResults.map((result, idx) => (
-                          <div
-                            key={idx}
-                            className={`p-4 rounded-lg border ${
-                              result.severity === 'high'
-                                ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
-                                : result.severity === 'medium'
-                                ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
-                                : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
-                            }`}
-                          >
-                            <div className="flex items-start gap-3">
-                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                                result.severity === 'high'
-                                  ? 'bg-red-100 dark:bg-red-900/30 text-red-600'
-                                  : result.severity === 'medium'
-                                  ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600'
-                                  : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600'
-                              }`}>
-                                {result.type === 'risk_distribution' && <BarChart3 className="w-4 h-4" />}
-                                {result.type === 'trend' && <TrendingUp className="w-4 h-4" />}
-                                {result.type === 'anomaly' && <AlertTriangle className="w-4 h-4" />}
-                                {result.type === 'correlation' && <PieChart className="w-4 h-4" />}
-                              </div>
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <h4 className="font-medium text-slate-900 dark:text-white">{result.title}</h4>
-                                  {result.severity && (
-                                    <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${
-                                      result.severity === 'high'
-                                        ? 'bg-red-100 dark:bg-red-900/30 text-red-600'
-                                        : result.severity === 'medium'
-                                        ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600'
-                                        : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600'
-                                    }`}>
-                                      {result.severity}
-                                    </span>
-                                  )}
-                                </div>
-                                <p className="text-sm text-slate-600 dark:text-slate-400">{result.description}</p>
-                              </div>
-                            </div>
-                          </div>
-                        ))
+                      ) : selectedFile.analysisResult ? (
+                        <ERMAnalysisPanel result={selectedFile.analysisResult} />
                       ) : (
                         <div className="flex flex-col items-center justify-center py-12">
                           <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center mb-4">
@@ -707,8 +879,13 @@ export function DataAnalysis() {
                           </div>
                           <p className="text-slate-600 dark:text-slate-400">No analysis results yet</p>
                           <p className="text-sm text-slate-500 dark:text-slate-500 mt-1">
-                            Click "Run AI Analysis" to get insights
+                            Click "Run Analysis" to generate ERM insights
                           </p>
+                          {selectedFile.ermDataType && (
+                            <p className="text-sm text-lumina-600 dark:text-lumina-400 mt-3">
+                              Detected as: {getDataTypeInfo(selectedFile.ermDataType).label}
+                            </p>
+                          )}
                         </div>
                       )}
                     </div>
@@ -721,12 +898,19 @@ export function DataAnalysis() {
                   <FileSpreadsheet className="w-10 h-10 text-slate-400" />
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
-                  No File Selected
+                  Upload Risk Data
                 </h3>
-                <p className="text-slate-600 dark:text-slate-400 max-w-md mx-auto">
-                  Upload a CSV, JSON, or Excel file to start analyzing your risk data.
-                  Drag and drop or click the upload button.
+                <p className="text-slate-600 dark:text-slate-400 max-w-md mx-auto mb-6">
+                  Upload your enterprise risk management data files for AI-powered analysis.
+                  Supported formats include Risk Registers, Risk Events, KRIs, Controls, and Stress Scenarios.
                 </p>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-lumina-600 text-white rounded-xl hover:bg-lumina-700 transition-colors"
+                >
+                  <Upload className="w-5 h-5" />
+                  Choose Files
+                </button>
               </div>
             )}
           </div>

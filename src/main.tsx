@@ -7,6 +7,10 @@ import { RiskIntelligenceProvider } from './stores/RiskIntelligenceStore'
 import './index.css'
 import App from './App.tsx'
 
+// Build version stamp for cache busting verification
+const BUILD_VERSION = '2026-01-26T' + Date.now()
+console.info('Build version:', BUILD_VERSION)
+
 // Synchronous theme detection BEFORE React renders (prevents flash)
 ;(function applyInitialTheme() {
   const theme = localStorage.getItem('lumina_r_theme')
